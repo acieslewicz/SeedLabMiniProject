@@ -105,12 +105,14 @@ def detect_markers(image, verbose=False):
     return
 
 def capture_video_stream():
-    camera = configure_camera()
+    resolution=(1280,720)
+    camera = configure_camera(resolution=resolution)
     rawCapture = PiRGBArray(camera)
     
     #Capture Frames
     for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
         image = frame.array
+        image = np.flip(image, 1)
         corners = detect_markers(image)
         centers = list()
 
@@ -122,7 +124,17 @@ def capture_video_stream():
                 point.append((corner[0][1]+corner[3][1])/2)
                 centers.append(point)
 
-        print(centers)
+        
+        #Detect quadrant location
+        quadrant = None
+        if centers is not None:
+            print(centers)
+            if centers[0][0] < resolution[0]/2 and centers[0][1] > resolution[1]/2:
+                quadrant = 1
+            else:
+                quadrant = 0
+
+        print(quadrant)
 
         cv2.aruco.drawDetectedMarkers(image, corners)
         
