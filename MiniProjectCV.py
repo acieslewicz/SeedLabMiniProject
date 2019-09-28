@@ -42,7 +42,7 @@ def configure_camera(resolution=(1280, 720), framerate = 24, iso_mode=None):
     output = PiRGBArray(camera)
     new_awb_gain = [0,0]
     
-    for i in range(10):
+    for i in range(3):
         camera.capture(output, format='bgr')
         calibration_image = output.array
         b = np.mean(calibration_image[:,:,0])
@@ -112,7 +112,6 @@ def capture_video_stream():
     #Capture Frames
     for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
         image = frame.array
-        image = np.flip(image, 1)
         corners = detect_markers(image)
         centers = list()
 
@@ -124,10 +123,9 @@ def capture_video_stream():
                 point.append((corner[0][1]+corner[3][1])/2)
                 centers.append(point)
 
-        
         #Detect quadrant location
         quadrant = None
-        if centers is not None:
+        if len(centers) != 0:
             print(centers)
             if centers[0][0] < resolution[0]/2 and centers[0][1] > resolution[1]/2:
                 quadrant = 1
@@ -138,6 +136,7 @@ def capture_video_stream():
 
         cv2.aruco.drawDetectedMarkers(image, corners)
         
+        image = cv2.flip(image, 1)
         cv2.imshow("Frame", image)
         detect_markers(image)
         key = cv2.waitKey(1) & 0xFF
