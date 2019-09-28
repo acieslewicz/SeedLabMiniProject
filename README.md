@@ -1,3 +1,2 @@
 # SeedLabCV
-Computer Vision Repository for SEED Lab
-Test
+This is the Computer Vision Portion of Seed Lab.
