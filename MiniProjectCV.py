@@ -86,7 +86,7 @@ def image_to_grayscale(image, verbose=False):
     return gray_scale_image
 
 def detect_markers(image, verbose=False):
-    resized_gs_image = image_to_grayscale(resize_image(image))
+    resized_gs_image = image_to_grayscale(image)
     aruco_dict = aruco.Dictionary_get(aruco.DICT_6X6_250)
     parameters = aruco.DetectorParameters_create()
     corners, ids, rejectedImgPoints = aruco.detectMarkers(resized_gs_image, aruco_dict, parameters=parameters)
@@ -112,6 +112,18 @@ def capture_video_stream():
     for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
         image = frame.array
         corners = detect_markers(image)
+        centers = list()
+
+        #Detect Centers
+        for cornerset in corners:
+            for corner in cornerset:
+                point = list()
+                point.append((corner[0][0]+corner[1][0])/2)
+                point.append((corner[0][1]+corner[3][1])/2)
+                centers.append(point)
+
+        print(centers)
+
         cv2.aruco.drawDetectedMarkers(image, corners)
         
         cv2.imshow("Frame", image)
