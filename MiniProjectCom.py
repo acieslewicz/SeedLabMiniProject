@@ -1,13 +1,15 @@
+import smbus
 import time
 import board
 import busio
 import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
 
-def configure_lcd():
+def configure_communication():
     lcd_columns = 16
     lcd_rows = 2
     
     # Initialise I2C bus.
+    bus = smbus.SMBus(1)
     i2c = busio.I2C(board.SCL, board.SDA)
     
     # Initialise the LCD class
@@ -15,7 +17,7 @@ def configure_lcd():
     lcd.clear()
     lcd.color = [0, 120, 180]
     time.sleep(1)
-    return lcd
+    return bus, i2c, lcd
     
 def write_messages(lcd, message1="", message2=""):
     if message1 is not None:

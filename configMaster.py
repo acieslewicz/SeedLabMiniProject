@@ -13,7 +13,6 @@ i2c = busio.I2C(board.SCL, board.SDA)
 # Initialise the LCD class
 lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
 
-
 # This is the address we setup in the Arduino Program
 address = 0x04
 

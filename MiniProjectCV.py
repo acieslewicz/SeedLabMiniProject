@@ -107,14 +107,20 @@ def detect_markers(image, verbose=False):
     return
 
 def capture_video_stream():
-    pi = 3.14159
+    #Arduino Address
+    address = 0x04
+
+    #Basic Position Values
+    pi = 3.14
     quadrant_2_position = (0, pi/2, pi, 3*pi/4)
+
+    #Camera configuration
     resolution=(1280,720)
     camera = configure_camera(resolution=resolution)
     rawCapture = PiRGBArray(camera)
     
-    #Configure LCD
-    lcd = MiniProjectCom.configure_lcd()
+    #Configure I2C Com and LCD
+    bus, i2c, lcd = MiniProjectCom.configure_communication()
     
     #Capture Frames
     for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
@@ -142,7 +148,8 @@ def capture_video_stream():
             else:
                 quadrant = 0
         if quadrant is not None:
-            MiniProjectCom.write_messages(lcd, "D. Pos:" + str(math.trunc(quadrant_2_position[quadrant], 5)))
+            MiniProjectCom.write_messages(lcd, "D. Pos:" + str(quadrant_2_position[quadrant]))
+            bus.write_byte(address, quadrant)
 
         cv2.aruco.drawDetectedMarkers(image, corners)
         
