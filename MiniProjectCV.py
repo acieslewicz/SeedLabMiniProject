@@ -5,7 +5,6 @@ import time
 import cv2
 from cv2 import aruco
 import MiniProjectCom
-import math
 
 def show_image(image, window_name):
     """Display a cv2 image and handle closing the imshow window"""
@@ -107,14 +106,20 @@ def detect_markers(image, verbose=False):
     return
 
 def capture_video_stream():
-    pi = 3.14159
-    quadrant_2_position = (0, pi/2, pi, 3*pi/4)
+    #Arduino Address
+    address = 0x04
+
+    #Basic Position Values
+    roundPos = 4;
+    quadrant_2_position = (0, round(np.pi/2, roundPos), round(np.pi, roundPos), round(4*np.pi/3,roundPos))
+
+    #Camera configuration
     resolution=(1280,720)
     camera = configure_camera(resolution=resolution)
     rawCapture = PiRGBArray(camera)
     
-    #Configure LCD
-    lcd = MiniProjectCom.configure_lcd()
+    #Configure I2C Com and LCD
+    bus, i2c, lcd = MiniProjectCom.configure_communication()
     
     #Capture Frames
     for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
@@ -132,6 +137,7 @@ def capture_video_stream():
 
         #Detect quadrant location
         quadrant = None
+        oldQuadrant = None
         if len(centers) != 0:
             if centers[0][0] < resolution[0]/2 and centers[0][1] > resolution[1]/2:
                 quadrant = 3
@@ -142,13 +148,16 @@ def capture_video_stream():
             else:
                 quadrant = 0
         if quadrant is not None:
-            MiniProjectCom.write_messages(lcd, "D. Pos:" + str(math.trunc(quadrant_2_position[quadrant], 5)))
+            lcd.clear()
+            if quadrant != oldQuadrant:
+                MiniProjectCom.write_messages(lcd, "D. Pos:" + str(quadrant_2_position[quadrant]))
+                oldQuadrant = quadrant
+            bus.write_byte(address, quadrant)
 
         cv2.aruco.drawDetectedMarkers(image, corners)
         
         image = cv2.flip(image, 1)
         cv2.imshow("Frame", image)
-        detect_markers(image)
         key = cv2.waitKey(1) & 0xFF
         
         rawCapture.truncate(0)
