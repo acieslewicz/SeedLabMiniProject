@@ -5,7 +5,6 @@ import time
 import cv2
 from cv2 import aruco
 import MiniProjectCom
-import math
 
 def show_image(image, window_name):
     """Display a cv2 image and handle closing the imshow window"""
@@ -111,8 +110,8 @@ def capture_video_stream():
     address = 0x04
 
     #Basic Position Values
-    pi = 3.14
-    quadrant_2_position = (0, pi/2, pi, 3*pi/4)
+    roundPos = 4;
+    quadrant_2_position = (0, round(np.pi/2, roundPos), round(np.pi, roundPos), round(4*np.pi/3,roundPos))
 
     #Camera configuration
     resolution=(1280,720)
@@ -138,6 +137,7 @@ def capture_video_stream():
 
         #Detect quadrant location
         quadrant = None
+        oldQuadrant = None
         if len(centers) != 0:
             if centers[0][0] < resolution[0]/2 and centers[0][1] > resolution[1]/2:
                 quadrant = 3
@@ -148,7 +148,10 @@ def capture_video_stream():
             else:
                 quadrant = 0
         if quadrant is not None:
-            MiniProjectCom.write_messages(lcd, "D. Pos:" + str(quadrant_2_position[quadrant]))
+            lcd.clear()
+            if quadrant != oldQuadrant:
+                MiniProjectCom.write_messages(lcd, "D. Pos:" + str(quadrant_2_position[quadrant]))
+                oldQuadrant = quadrant
             bus.write_byte(address, quadrant)
 
         cv2.aruco.drawDetectedMarkers(image, corners)
