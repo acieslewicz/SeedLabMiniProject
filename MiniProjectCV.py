@@ -126,12 +126,11 @@ def capture_video_stream():
         #Detect quadrant location
         quadrant = None
         if len(centers) != 0:
-            print(centers)
             if centers[0][0] < resolution[0]/2 and centers[0][1] > resolution[1]/2:
                 quadrant = 3
-            if centers[0][0] > resolution[0]/2 and centers[0][1] > resolution[1]/2:
+            elif centers[0][0] > resolution[0]/2 and centers[0][1] > resolution[1]/2:
                 quadrant = 2
-            if centers[0][0] > resolution[0]/2 and centers[0][1] < resolution[1]/2:
+            elif centers[0][0] > resolution[0]/2 and centers[0][1] < resolution[1]/2:
                 quadrant = 1
             else:
                 quadrant = 0
