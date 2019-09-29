@@ -155,7 +155,6 @@ def capture_video_stream():
         
         image = cv2.flip(image, 1)
         cv2.imshow("Frame", image)
-        detect_markers(image)
         key = cv2.waitKey(1) & 0xFF
         
         rawCapture.truncate(0)
