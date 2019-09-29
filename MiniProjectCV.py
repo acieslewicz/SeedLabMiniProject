@@ -4,6 +4,8 @@ import numpy as np
 import time
 import cv2
 from cv2 import aruco
+import MiniProjectCom
+import math
 
 def show_image(image, window_name):
     """Display a cv2 image and handle closing the imshow window"""
@@ -105,9 +107,14 @@ def detect_markers(image, verbose=False):
     return
 
 def capture_video_stream():
+    pi = 3.14159
+    quadrant_2_position = (0, pi/2, pi, 3*pi/4)
     resolution=(1280,720)
     camera = configure_camera(resolution=resolution)
     rawCapture = PiRGBArray(camera)
+    
+    #Configure LCD
+    lcd = MiniProjectCom.configure_lcd()
     
     #Capture Frames
     for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
@@ -135,7 +142,7 @@ def capture_video_stream():
             else:
                 quadrant = 0
         if quadrant is not None:
-            print(quadrant)
+            MiniProjectCom.write_messages(lcd, "D. Pos:" + str(math.trunc(quadrant_2_position[quadrant], 5)))
 
         cv2.aruco.drawDetectedMarkers(image, corners)
         
@@ -148,6 +155,7 @@ def capture_video_stream():
         
         if key == ord("q"):
             cv2.destroyAllWindows()
+            MiniProjectCom.turn_lcd_off(lcd)
             break
  
 if __name__ == '__main__':
