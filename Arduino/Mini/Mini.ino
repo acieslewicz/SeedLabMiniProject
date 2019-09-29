@@ -12,6 +12,8 @@
  * Connect ground from PI to arduino GND
 */
 #include <Encoder.h>
+#include <Wire.h>
+ #define SLAVE_ADDRESS 0x04
  #define MotorVoltageA 9
  #define MotorVoltageB   10
  #define VoltageSignA 7
@@ -20,15 +22,16 @@
  #define Fault 12
   #define pin1 2
   #define pin2 6
+  #define i2c 13
   float Kp = 100;
-  float Ki = 10;
+  float Ki = 11;
   float integralError = 0;
   float positionError;
-  int passedPos = 3;
+  int passedPos = 0;
   float Ts = 0;
   float Tc = millis();
-  float encoderPosition = 0;
-  float encoderRadians = 0;
+  float encoderPosition = 0.0;
+  float encoderRadians = 0.0;
   float neededPosition[] = {0, PI/2, PI, 3*PI/2};
   String receivedString;
   String resetEncoder = "reset";
@@ -39,9 +42,10 @@
   int16_t stringToInt;
 
 
+//////////////////////////////////////////////
 void setup()
 {
-  Serial.begin(9600);  // set up serial so we can output state
+  Serial.begin(115200);  // set up serial so we can output state
   pinMode(MotorVoltageA, OUTPUT);
   pinMode(VoltageSignA, OUTPUT);
   pinMode(MotorVoltageB, OUTPUT);
@@ -49,10 +53,14 @@ void setup()
   pinMode(Reset,OUTPUT);
   pinMode(Fault,INPUT);
   digitalWrite(Reset, HIGH);
-  
+  pinMode(i2c,OUTPUT);
+  Wire.begin(SLAVE_ADDRESS);
+  Wire.onReceive(receiveData);
+  Wire.onRequest(sendData);
 
   }
 
+//////////////////////////////////////////////
   // The loop function reads encoder position and calculated needed speed and direction to get to desired position
 void loop()
 {
@@ -71,26 +79,26 @@ void loop()
   else if(motorSpeed > 255){
     motorSpeed = 255;
   }
-  else if(motorSpeed > -5 && motorSpeed < 5){ //turns motor off too get rid of motor whine
+  else if(motorSpeed > -3 && motorSpeed < 3){ //turns motor off too get rid of motor whine
     motorSpeed = 0;
   }
-  else if(motorSpeed > -12 && motorSpeed <= -5){  //boosting pwm to overcome friction
-    motorSpeed -= 8;
+  else if(motorSpeed > -12 && motorSpeed <= -3){  //boosting pwm to overcome friction
+    motorSpeed -= 15;
   }
-  else if(motorSpeed >= 5 && motorSpeed < 12){
-    motorSpeed += 8;
+  else if(motorSpeed >= 3 && motorSpeed < 12){
+    motorSpeed += 15;
   }
   Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
   Tc = millis();
 
-  //recvString();
-  //showNewData();
+  
   motor(motorSpeed);
 
   
  
 }
 
+//////////////////////////////////////////////
 // The motor function outputs the pwm value passed to it to the correct motor pin by analogWriting the value
 void motor(int16_t pwm){
     if(pwm > 0){    //this insures the positive pwms are sent as normal
@@ -105,8 +113,24 @@ void motor(int16_t pwm){
       analogWrite(MotorVoltageA, 0);
     }
 }
-//////////////////////////////////////////////
 
+//////////////////////////////////////////////
+//This function reads the data sent over i2c
+void receiveData(int byteCount){
+
+  while(Wire.available()) {
+    passedPos = Wire.read();
+  }
+}
+
+//////////////////////////////////////////////
+//This function sends back current position in radians to LCD
+void sendData(){
+Wire.write((byte)encoderRadians);
+}
+
+
+//////////////////////////////////////////////
 // This function waits for an input from the serial monitor and captures any strings, and trims/converts to ints
 void recvString() {
  if (Serial.available() > 0) {
@@ -123,16 +147,26 @@ void recvString() {
  newData = true;  // sets data waiting flag
  }
 }
+
+//////////////////////////////////////////////
 // This function checks if the serial input is the reset command or a pwm value to drive and resets the encoder or sets the motor speed accordingly
 void showNewData() {
  if (newData == true) {
    if(receivedString.equals(resetEncoder)){
     myEnc.write(0);
    }
-   else if(stringToInt>= -255 && stringToInt <= 255){
-    motorSpeed = stringToInt;
+   else if(stringToInt == 0){
+    passedPos = 0;
    }
-  
+   else if(stringToInt == 1){
+    passedPos = 1;
+   }
+   else if(stringToInt == 2){
+    passedPos = 2;
+   }
+   else if(stringToInt == 3){
+    passedPos = 3;
+   }
   newData = false;  //resets data waiting flag
  }
 }
