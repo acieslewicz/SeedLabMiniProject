@@ -111,7 +111,7 @@ def capture_video_stream():
 
     #Basic Position Values
     roundPos = 4;
-    quadrant_2_position = (0, round(np.pi/2, roundPos), round(np.pi, roundPos), round(4*np.pi/3,roundPos))
+    quadrant_2_position = (0, round(np.pi/2, roundPos), round(np.pi, roundPos), round(3*np.pi/2,roundPos))
 
     #Camera configuration
     resolution=(1280,720)
@@ -120,6 +120,10 @@ def capture_video_stream():
     
     #Configure I2C Com and LCD
     bus, i2c, lcd = MiniProjectCom.configure_communication()
+    MiniProjectCom.write_messages(lcd, "D. Pos:" + " None")
+    
+    
+    oldQuadrant = None
     
     #Capture Frames
     for frame in camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
@@ -134,26 +138,42 @@ def capture_video_stream():
                 point.append((corner[0][0]+corner[1][0])/2)
                 point.append((corner[0][1]+corner[3][1])/2)
                 centers.append(point)
+                
+        #Read value from arduino
+        size = 5
+        data = None
+        try:
+            data = bus.read_i2c_block_data(address, 0, size)
+        except:
+            print("Error Reading Data")
+            
+        if data is not None:
+            actualPosition = ""
+            for character in data:
+                actualPosition = actualPosition + (chr(character))
+                
+            print(actualPosition[:-1])
+            MiniProjectCom.write_messages(lcd, "","A. Pos:" + actualPosition[:-1])
 
         #Detect quadrant location
         quadrant = None
-        oldQuadrant = None
         if len(centers) != 0:
             if centers[0][0] < resolution[0]/2 and centers[0][1] > resolution[1]/2:
-                quadrant = 3
+                quadrant = 4
             elif centers[0][0] > resolution[0]/2 and centers[0][1] > resolution[1]/2:
-                quadrant = 2
+                quadrant = 3
             elif centers[0][0] > resolution[0]/2 and centers[0][1] < resolution[1]/2:
-                quadrant = 1
+                quadrant = 2
             else:
-                quadrant = 0
+                quadrant = 1
         if quadrant is not None:
-            lcd.clear()
             if quadrant != oldQuadrant:
-                MiniProjectCom.write_messages(lcd, "D. Pos:" + str(quadrant_2_position[quadrant]))
-                oldQuadrant = quadrant
-            bus.write_byte(address, quadrant)
-
+                lcd.clear()
+                MiniProjectCom.write_messages(lcd, "D. Pos:" + str(quadrant_2_position[quadrant - 1]))
+                
+            bus.write_byte(address, quadrant) 
+            oldQuadrant = quadrant
+            
         cv2.aruco.drawDetectedMarkers(image, corners)
         
         image = cv2.flip(image, 1)

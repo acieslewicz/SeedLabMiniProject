@@ -15,7 +15,7 @@ def configure_communication():
     # Initialise the LCD class
     lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
     lcd.clear()
-    lcd.color = [0, 120, 180]
+    lcd.color = [0, 100, 0]
     time.sleep(1)
     return bus, i2c, lcd
     
