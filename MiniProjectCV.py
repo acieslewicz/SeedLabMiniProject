@@ -110,7 +110,7 @@ def capture_video_stream():
     address = 0x04
 
     #Basic Position Values
-    roundPos = 4;
+    roundPos = 2;
     quadrant_2_position = (0, round(np.pi/2, roundPos), round(np.pi, roundPos), round(3*np.pi/2,roundPos))
 
     #Camera configuration
@@ -151,9 +151,15 @@ def capture_video_stream():
             actualPosition = ""
             for character in data:
                 actualPosition = actualPosition + (chr(character))
-                
-            print(actualPosition[:-1])
-            MiniProjectCom.write_messages(lcd, "","A. Pos:" + actualPosition[:-1])
+            
+            actualPositionFloat = float(actualPosition[:-1])
+            if actualPositionFloat < 0:
+                actualPositionFloat = round(2*np.pi + actualPositionFloat, 2)
+            if actualPositionFloat == 0:
+                actualPositionFloat = 0.00
+            print(actualPositionFloat)
+            actualPosition = str(actualPositionFloat)
+            MiniProjectCom.write_messages(lcd, "","A. Pos:" + actualPosition)
 
         #Detect quadrant location
         quadrant = None
