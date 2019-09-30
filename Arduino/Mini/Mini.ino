@@ -11,9 +11,9 @@
  * Connect Clock Line from PI to pin A5
  * Connect ground from PI to arduino GND
 */
-#include <Encoder.h>
-#include <Wire.h>
- #define SLAVE_ADDRESS 0x04
+ #include <Encoder.h>
+ #include <Wire.h>
+ #define SLAVE_ADDRESS 0x04   //i2c address for arduino
  int state = 0;
  #define MotorVoltageA 9
  #define MotorVoltageB   10
@@ -24,8 +24,8 @@
   #define pin1 2
   #define pin2 6
   #define i2c 13
-  float Kp = 100;
-  float Ki = 11;
+  float Kp = 300;  //proportional control
+  float Ki = 11;    //integral control
   float integralError = 0;
   float positionError;
   int passedPos = 0;
@@ -47,11 +47,11 @@
 void setup()
 {
   Serial.begin(115200);  // set up serial so we can output state
-  pinMode(MotorVoltageA, OUTPUT);
+  pinMode(MotorVoltageA, OUTPUT);  //set motor speed and dir pins as output
   pinMode(VoltageSignA, OUTPUT);
   pinMode(MotorVoltageB, OUTPUT);
   pinMode(VoltageSignB, OUTPUT);
-  pinMode(Reset,OUTPUT);
+  pinMode(Reset,OUTPUT);  
   pinMode(Fault,INPUT);
   digitalWrite(Reset, HIGH);
   pinMode(i2c,OUTPUT);
