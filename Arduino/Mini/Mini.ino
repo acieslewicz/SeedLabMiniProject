@@ -14,6 +14,7 @@
 #include <Encoder.h>
 #include <Wire.h>
  #define SLAVE_ADDRESS 0x04
+ int state = 0;
  #define MotorVoltageA 9
  #define MotorVoltageB   10
  #define VoltageSignA 7
@@ -30,8 +31,8 @@
   int passedPos = 0;
   float Ts = 0;
   float Tc = millis();
-  float encoderPosition = 0.0;
-  float encoderRadians = 0.0;
+  float encoderPosition = 0.000;
+  float encoderRadians = 0.000;
   float neededPosition[] = {0, PI/2, PI, 3*PI/2};
   String receivedString;
   String resetEncoder = "reset";
@@ -117,16 +118,30 @@ void motor(int16_t pwm){
 //////////////////////////////////////////////
 //This function reads the data sent over i2c
 void receiveData(int byteCount){
-
+  int inputVal;
   while(Wire.available()) {
-    passedPos = Wire.read();
+    if(state == 0){
+      inputVal = Wire.read();
+    }
+    if(inputVal != 0){
+      passedPos = inputVal-1;
+    }
+    
+    
   }
+  Serial.println(passedPos);
 }
 
 //////////////////////////////////////////////
 //This function sends back current position in radians to LCD
 void sendData(){
-Wire.write((byte)encoderRadians);
+  state = 1;
+  String passString = (String)encoderRadians;
+  for(int i = 0; i<5; i++){
+    Wire.write((byte)passString.charAt(i));
+    //Serial.println((byte)passString.charAt(i));
+  }
+  state = 0;
 }
 
 
