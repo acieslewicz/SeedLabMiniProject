@@ -139,10 +139,11 @@ def capture_video_stream():
                 point.append((corner[0][1]+corner[3][1])/2)
                 centers.append(point)
                 
-        #Read value from arduino
+        #Initialize the size of file to recieve and ensures that the starting data value is Null
         size = 5
         data = None
         try:
+            #Reads data from the Arduino in blocks of 5
             data = bus.read_i2c_block_data(address, 0, size)
         except:
             print("Error Reading Data")
@@ -151,7 +152,7 @@ def capture_video_stream():
             actualPosition = ""
             for character in data:
                 actualPosition = actualPosition + (chr(character))
-            
+            #Prevents the system from displaying negative numbers
             actualPositionFloat = float(actualPosition[:-1])
             if actualPositionFloat < 0:
                 actualPositionFloat = round(2*np.pi + actualPositionFloat, 2)
@@ -176,12 +177,12 @@ def capture_video_stream():
             if quadrant != oldQuadrant:
                 lcd.clear()
                 MiniProjectCom.write_messages(lcd, "D. Pos:" + str(quadrant_2_position[quadrant - 1]))
-                
+             #Sends quandrant information to the arduino
             bus.write_byte(address, quadrant) 
             oldQuadrant = quadrant
             
         cv2.aruco.drawDetectedMarkers(image, corners)
-        
+        #Flips the image since the camera reads it in backwards
         image = cv2.flip(image, 1)
         cv2.imshow("Frame", image)
         key = cv2.waitKey(1) & 0xFF
