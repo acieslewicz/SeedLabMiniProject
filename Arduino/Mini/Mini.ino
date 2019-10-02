@@ -73,7 +73,7 @@ void loop()
     positionError = positionError-2*PI;    //This insures the direction chosen is always the shortest path
   }
   integralError = integralError + ((Ts*positionError)/1000); //implementing the integral error accumulation
-  motorSpeed = (int)(Kp*positionError + Ki*integralError);   //calculating motor output
+  motorSpeed = (int)(Kp*positionError + Ki*integralError);   //calculating motor output in PWM output directly, no need to convert from voltage
   if(motorSpeed < -255){ //bounding motor speed to usable pwm values
     motorSpeed = -255;
   }
