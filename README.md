@@ -1,2 +1,2 @@
-# SeedLabCV
-This is the Computer Vision Portion of Seed Lab.
+# Seed Lab Mini Project 
+The completed code for the SEED Lab Mini Project.
