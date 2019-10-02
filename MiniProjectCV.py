@@ -110,7 +110,7 @@ def capture_video_stream():
     address = 0x04
 
     #Basic Position Values
-    roundPos = 2;
+    roundPos = 2
     quadrant_2_position = (0, round(np.pi/2, roundPos), round(np.pi, roundPos), round(3*np.pi/2,roundPos))
 
     #Camera configuration
