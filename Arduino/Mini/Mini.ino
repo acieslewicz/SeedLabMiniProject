@@ -1,4 +1,3 @@
-
 /*This code is to implement a PI motor control that takes in positions passed from raspberry pi and rotates the motor to 
  * the correct position.
  * Hardware Setup: 
