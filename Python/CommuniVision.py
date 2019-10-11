@@ -69,13 +69,13 @@ class CommuniVision:
     #Write Lines to the LCD
     def writeTopLine(self, topLine=""):
         message = str(topLine)
-        self.lcd.clear()
+        #self.lcd.clear()
         self.lcd.message = message
         return
 
     def writeBotLine(self, botLine=""):
         message = "\n" + str(botLine)
-        self.lcd.clear()
+        #self.lcd.clear()
         self.lcd.message = message
         return
 
@@ -85,9 +85,10 @@ class CommuniVision:
             #Reads floats up to messageSize - 1 digits from Arduino
             data = bus.read_i2c_block_data(self.address, 0, messageSize)
         except:
-            print("Error Reading Data")
+            #print("Error Reading Data")
             data = None
             
+        actualPositionFloat = None
         #Process any actual position data if it is received
         if data is not None:
             #Recieve each character from the recieve buffer and append it to a string
@@ -105,14 +106,17 @@ class CommuniVision:
             actualPosition = str(actualPositionFloat)
             self.writeBotLine("A. pos: " + actualPosition)
         
-        return
+        return actualPositionFloat
 
     def sendValueandDisplay(self, quadrant):
         if quadrant is not None:
             self.lcd.clear()
-            self.writeTopLine("D. Pos:" + str(self.quadrant_2_position[quadrant]))
+            self.writeTopLine("D. Pos:" + str(self.quadrant_2_position[quadrant-1]))
              #Sends quandrant information to the arduino
-            self.bus.write_byte(self.address, quadrant) 
+            try:
+                self.bus.write_byte(self.address, quadrant)
+            except:
+                pass
         return
 
 #Image Processing
@@ -130,7 +134,7 @@ def detectMarkers(image, arucoDictionary=aruco.DICT_6X6_250):
     gs_image = imageToGrayscale(image)
     aruco_dict = aruco.Dictionary_get(arucoDictionary)
     parameters = aruco.DetectorParameters_create()
-    corners, ids = aruco.detectMarkers(gs_image, aruco_dict, parameters=parameters)
+    corners, ids, rejectedCorners = aruco.detectMarkers(gs_image, aruco_dict, parameters=parameters)
 
     return corners, ids
 
@@ -139,22 +143,23 @@ def arucoCenters(corners):
 
     #Detect Aruco centers by taking the average of the top left and right Aruco corners
     #for horizontal centers and top left and bottom left for vertical centers
-    for cornerset in corners:
-        point = list()
-        point.append((cornerset[0][0]+cornerset[1][0]+cornerset[2][0]+cornerset[3][0])/4)
-        point.append((cornerset[0][1]+cornerset[1][1]+cornerset[2][1]+cornerset[3][1])/4)
-        centers.append(point)
+    if len(corners) > 0:
+        for cornerset in corners:
+            point = list()
+            point.append((cornerset[0][0][0]+cornerset[0][1][0]+cornerset[0][2][0]+cornerset[0][3][0])/4)
+            point.append((cornerset[0][0][1]+cornerset[0][1][1]+cornerset[0][2][1]+cornerset[0][3][1])/4)
+            centers.append(point)
 
     return centers  
     
 def determineQuadrant(arucoCenters, resolution):
     quadrants = list()
     for center in arucoCenters:
-        if center[0] < camera.resolution[0]/2 and center[1] > camera.resolution[1]/2:
+        if center[0] < resolution[0]/2 and center[1] > resolution[1]/2:
             quadrants.append(4)
-        elif center[0] > camera.resolution[0]/2 and center[1] > camera.resolution[1]/2:
+        elif center[0] > resolution[0]/2 and center[1] > resolution[1]/2:
             quadrants.append(3)
-        elif center[0] > camera.resolution[0]/2 and center[1] < camera.resolution[1]/2:
+        elif center[0] > resolution[0]/2 and center[1] < resolution[1]/2:
             quadrants.append(2)
         else:
             quadrants.append(1)

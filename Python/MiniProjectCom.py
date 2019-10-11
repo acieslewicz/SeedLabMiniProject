@@ -7,7 +7,7 @@ Handles configuring and controlling LCD in addition to configuring i2c bus
 Look how easy it is to use:
 
     Import as a module in order to access the functions inside
-	
+    
 Credits
 --------
 Alexander Cieslewicz
@@ -53,7 +53,7 @@ def configure_communication():
     lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
     lcd.clear()
     #Sets background colour of the LCD
-    lcd.color = [0, 100, 0]
+    lcd.color = [100, 0, 0]
     time.sleep(1)
     return bus, i2c, lcd
 
@@ -84,3 +84,8 @@ def turn_lcd_off(lcd):
     lcd.clear()
     lcd.color = [0,0,0]
     time.sleep(1)
+
+bus, i2c, lcd = configure_communication()
+write_messages(lcd, "test", "test")
+time.sleep(2)
+
