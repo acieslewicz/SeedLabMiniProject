@@ -13,6 +13,9 @@ import numpy as np
 import time
 
 class CommuniVision:
+    roundPos = 2
+    quadrant_2_position = (0, round(np.pi/2, roundPos), round(np.pi, roundPos), round(3*np.pi/2,roundPos))
+
     #LCD Power On and Off
     def turnOnLCD(self):
         self.lcd.clear()
@@ -101,13 +104,15 @@ class CommuniVision:
             #Show the position on the LCD
             actualPosition = str(actualPositionFloat)
             self.writeBotLine("A. pos: " + actualPosition)
+        
+        return
 
-    def sendValueandDisplay(self, value):
-        if value is not None:
+    def sendValueandDisplay(self, quadrant):
+        if quadrant is not None:
             self.lcd.clear()
-            self.writeTopLine("D. Pos:" + str(value))
+            self.writeTopLine("D. Pos:" + str(self.quadrant_2_position[quadrant]))
              #Sends quandrant information to the arduino
-            self.bus.write_byte(address, quadrant) 
+            self.bus.write_byte(self.address, quadrant) 
         return
 
 #Image Processing
@@ -142,14 +147,14 @@ def arucoCenters(corners):
 
     return centers  
     
-def determineQuadrant(arucoCenters):
+def determineQuadrant(arucoCenters, resolution):
     quadrants = list()
     for center in arucoCenters:
-        if center[0] < self.resolution[0]/2 and center[1] > self.resolution[1]/2:
+        if center[0] < camera.resolution[0]/2 and center[1] > camera.resolution[1]/2:
             quadrants.append(4)
-        elif center[0] > self.resolution[0]/2 and center[1] > self.resolution[1]/2:
+        elif center[0] > camera.resolution[0]/2 and center[1] > camera.resolution[1]/2:
             quadrants.append(3)
-        elif center[0] > self.resolution[0]/2 and center[1] < self.resolution[1]/2:
+        elif center[0] > camera.resolution[0]/2 and center[1] < camera.resolution[1]/2:
             quadrants.append(2)
         else:
             quadrants.append(1)
