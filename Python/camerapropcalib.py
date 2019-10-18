@@ -33,7 +33,7 @@ if __name__ == "__main__":
             imgpoints.append(corners)
 
             # Draw and display the corners
-            cv2.drawChessboardCorners(img, (7,6), corners2,ret)
+            cv2.drawChessboardCorners(img, (7,6), corners ,ret)
             cv2.imshow('img',img)
             cv2.waitKey(500)
 
