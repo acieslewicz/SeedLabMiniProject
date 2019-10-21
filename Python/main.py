@@ -14,13 +14,14 @@ if __name__ == "__main__":
     count = 0
     for image in comandCamera.camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
         frame = image.array
-        print(count)
-        cv2.imwrite('test' + str(count) + '.jpg',frame)
-        count = count + 1
         corners = CommuniVision.detectMarkers(frame)
-
-        distance = CommuniVision.calculateDistance(comandCamera.focal_lengths, corners, [83, 83], comandCamera.resolution, comandCamera.resolution)
-        print(distance)
+#        rvecs, tvecs, _objPoints = cv2.aruco.estimatePoseSingleMarkers(corners[0], 83, comandCamera.intrinsic_params, comandCamera.distortion)
+#        print(rvecs)
+        
+        if len(corners[0]) > 0:
+            distance = CommuniVision.calculateDistance(comandCamera.focal_lengths, corners[0], [83, 83], comandCamera.resolution, comandCamera.sensor_dimensions)
+            #width, height = CommuniVision.arucoMarkerDimension(corners[0])
+            print(distance/10,"cm")
 
         #Show the image stream
         cv2.imshow("Video", frame)
