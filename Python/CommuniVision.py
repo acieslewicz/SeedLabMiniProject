@@ -27,7 +27,7 @@ class CommuniVision:
         self.lcd.color = [0,0,0]
         time.sleep(1)
 
-    def __init__(self, resolution=[1280, 720], framerate=27, isoMode="bright", address=0x04, lcdDimensions=[16, 2]):
+    def __init__(self, resolution=[1280, 720], framerate=27, isoMode="", address=0x04, lcdDimensions=[16, 2]):
 
         # Defining Communication Variables
         self.address = address
@@ -35,6 +35,11 @@ class CommuniVision:
 
         self.camera = PiCamera(resolution=resolution, framerate=framerate)
         self.resolution = resolution
+
+        #TODO: Need to move these params to the init function so that they can be customized
+        self.sensor_dimensions = [3.76, 2.74] 
+        self.intrinsic_params = np.load('camera_intrinsic.npy')
+        self.focal_lengths = [self.intrinsic_params[0][0] * self.sensor_dimensions[0] /resolution[0], self.intrinsic_params[1][1] * self.sensor_dimensions[1] /resolution[1]]
 
         #Configure camera iso and exposure for consistent quality
         if isoMode == "dark":
@@ -165,3 +170,21 @@ def determineQuadrant(arucoCenters, resolution):
             quadrants.append(1)
 
     return quadrants
+
+def arucoMarkerDimension(arucoCorners):
+    width = np.linalg.norm((arucoCorners[0][0][0] - arucoCorners[0][0][1]))
+    height = np.linalg.norm((arucoCorners[0][0][1] - arucoCorners[0][0][2]))
+
+    return width, height
+
+#Calculate distance using focal length and aruco marker dimensions
+def calculateDistance(focalLengths, arucoCorners, arucoMarkerDim_w, imageDim, sensorDim):
+    #Determine the dimensions of the Aruco Marker
+    markerWidth, markerHeight = arucoMarkerDimension(arucoCorners)
+
+    #Using the width and heigh determine the distance to the marker in mm
+    distance_width = focalLengths[0]*arucoMarkerDim_w[0]*imageDim[0]/(markerWidth*sensorDim[0])
+    distance_height = focalLengths[1]*arucoMarkerDim_w[1]*imageDim[1]/(markerHeight*sensorDim[1])
+    distanceToMarker = (distance_height + distance_width)/2
+
+    return distanceToMarker

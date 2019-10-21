@@ -18,17 +18,8 @@ if __name__ == "__main__":
         cv2.imwrite('test' + str(count) + '.jpg',frame)
         count = count + 1
         corners = CommuniVision.detectMarkers(frame)
-        centers = CommuniVision.arucoCenters(corners[0])
-        quadrants = CommuniVision.determineQuadrant(centers, comandCamera.resolution)
-        
-        if len(quadrants) > 0:
-            if quadrants[0] != oldQuadrant:
-                comandCamera.sendValueandDisplay(quadrants[0])
-                oldQuadrant = quadrants[0]
 
-        currentPosition = comandCamera.readPosition()
-        if currentPosition is None:
-            comandCamera.writeBotLine("A. Pos:")
+        distance = CommuniVision.calculateDistance(comandCamera.focal_lengths, corners, 1, comandCamera.resolution, comandCamera.resolution)
 
         #Show the image stream
         cv2.imshow("Video", frame)
@@ -41,3 +32,43 @@ if __name__ == "__main__":
             comandCamera.turnOffLCD()
             break
     pass
+
+# if __name__ == "__main__":
+#     oldQuadrant = None  
+
+#     comandCamera = CommuniVision.CommuniVision()
+#     rawCapture = PiRGBArray(comandCamera.camera)
+    
+#     comandCamera.writeTopLine("D. Pos:")
+#     comandCamera.writeBotLine("A. Pos:")
+    
+#     count = 0
+#     for image in comandCamera.camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
+#         frame = image.array
+#         print(count)
+#         cv2.imwrite('test' + str(count) + '.jpg',frame)
+#         count = count + 1
+#         corners = CommuniVision.detectMarkers(frame)
+#         centers = CommuniVision.arucoCenters(corners[0])
+#         quadrants = CommuniVision.determineQuadrant(centers, comandCamera.resolution)
+        
+#         if len(quadrants) > 0:
+#             if quadrants[0] != oldQuadrant:
+#                 comandCamera.sendValueandDisplay(quadrants[0])
+#                 oldQuadrant = quadrants[0]
+
+#         currentPosition = comandCamera.readPosition()
+#         if currentPosition is None:
+#             comandCamera.writeBotLine("A. Pos:")
+
+#         #Show the image stream
+#         cv2.imshow("Video", frame)
+#         key = cv2.waitKey(1) & 0xFF
+#         rawCapture.truncate(0)
+        
+#         #Exit and turn off devices if 'q' is pressed
+#         if key == ord("q"):
+#             cv2.destroyAllWindows()
+#             comandCamera.turnOffLCD()
+#             break
+#     pass

@@ -16,7 +16,7 @@ if __name__ == "__main__":
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
 
-    images = glob.glob('*.jpg')
+    images = glob.glob(r'Z:\SEED\SeedLabMiniProject\Python\CalibrationImages\*.jpg')
 
     for fname in images:
         img = cv2.imread(fname)
@@ -38,4 +38,12 @@ if __name__ == "__main__":
             cv2.waitKey(500)
 
     cv2.destroyAllWindows()
+
+    #Run the Calibration using the gathered points
+    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
+
+    #Save the parameters for future use
+    np.save('camera_intrinsic.npy', mtx)
+    np.save('camera_distortion.npy', dist)
+    print(mtx)
     pass
