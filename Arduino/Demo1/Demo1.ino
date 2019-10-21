@@ -55,7 +55,7 @@
   int16_t motorSpeedLeftInt = 0;
   int16_t motorSpeedRightInt = 0;
   int16_t stringToInt;
-  int distance = 5;
+  int distance = 10;
   float angle = 0;
   int first = 0;
 
@@ -83,8 +83,8 @@ void setup()
 void loop(){
 
    if(angle != 0){
-      neededPositionLeft = -1*(1.49*angle);
-      neededPositionRight = (1.49*angle);
+      neededPositionLeft = -1*(1.46*angle);
+      neededPositionRight = (1.46*angle);
      encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
       encoderPositionRight = rightWheel.read();
       // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
@@ -136,7 +136,7 @@ void loop(){
       motor(1,motorSpeedLeftInt);
     }
     if(distance != 0){
-      neededPositionLeft = ((distance*30.48)/(PI*wheelDiameter))*2*PI;
+      neededPositionLeft = ((distance*29.5)/(PI*wheelDiameter))*2*PI;
       neededPositionRight = neededPositionLeft;
       encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
       encoderPositionRight = rightWheel.read();
@@ -183,7 +183,7 @@ void loop(){
       
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
-      motorSpeedLeft = motorSpeedLeft*0.95 ;
+      motorSpeedLeft = motorSpeedLeft*0.955 ;
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
   
