@@ -27,9 +27,9 @@
   #define pin3 3
   #define pin4 5
   #define i2c 13
-  float KpLeft = 70;  //proportional control
+  float KpLeft = 500;  //proportional control
   float KiLeft = 6;    //integral control
-  float KpRight = 78;  //proportional control
+  float KpRight = 500;  //proportional control
   float KiRight = 6;    //integral control
   long double integralErrorLeft = 0;
   long double integralErrorRight = 0;
@@ -55,8 +55,8 @@
   int16_t motorSpeedLeftInt = 0;
   int16_t motorSpeedRightInt = 0;
   int16_t stringToInt;
-  int distance = 0;
-  float angle = -10;
+  int distance = 5;
+  float angle = 0;
   int first = 0;
 
 
@@ -83,8 +83,8 @@ void setup()
 void loop(){
 
    if(angle != 0){
-      neededPositionLeft = -1*(angle/2);
-      neededPositionRight = (angle/2);
+      neededPositionLeft = -1*(1.49*angle);
+      neededPositionRight = (1.49*angle);
      encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
       encoderPositionRight = rightWheel.read();
       // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
@@ -96,11 +96,11 @@ void loop(){
       integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
       motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
       motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
-      if(motorSpeedLeft < -255){ //bounding motor speed to usable pwm values
-        motorSpeedLeft = -255;
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
       }
-      else if(motorSpeedLeft > 255){
-        motorSpeedLeft = 255;
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
       }
       else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
         motorSpeedLeft = 0;
@@ -111,11 +111,11 @@ void loop(){
       else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
         motorSpeedLeft += 15;
       }
-      if(motorSpeedRight < -255){ //bounding motor speed to usable pwm values
-        motorSpeedRight = -255;
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
       } 
-      else if(motorSpeedRight > 255){
-        motorSpeedRight = 255;
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
       } 
       else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
         motorSpeedRight = 0;
@@ -150,11 +150,11 @@ void loop(){
       motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
       motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
       
-      if(motorSpeedLeft < -255){ //bounding motor speed to usable pwm values
-        motorSpeedLeft = -255;
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
       }
-      else if(motorSpeedLeft > 255){
-        motorSpeedLeft = 255;
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
       }
       else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
         motorSpeedLeft = 0;
@@ -165,11 +165,11 @@ void loop(){
       else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
         motorSpeedLeft += 15;
       }
-      if(motorSpeedRight < -255){ //bounding motor speed to usable pwm values
-        motorSpeedRight = -255;
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
       } 
-      else if(motorSpeedRight > 255){
-        motorSpeedRight = 255;
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
       } 
       else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
         motorSpeedRight = 0;
@@ -183,7 +183,7 @@ void loop(){
       
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
-      
+      motorSpeedLeft = motorSpeedLeft*0.95 ;
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
   
