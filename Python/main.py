@@ -5,14 +5,18 @@ from picamera.array import PiRGBArray
 if __name__ == "__main__":
     oldQuadrant = None  
 
-    comandCamera = CommuniVision.CommuniVision(isoMode="dark")
+    comandCamera = CommuniVision.CommuniVision()
     rawCapture = PiRGBArray(comandCamera.camera)
     
     comandCamera.writeTopLine("D. Pos:")
     comandCamera.writeBotLine("A. Pos:")
     
+    count = 0
     for image in comandCamera.camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
         frame = image.array
+        print(count)
+        cv2.imwrite('test' + str(count) + '.jpg',frame)
+        count = count + 1
         corners = CommuniVision.detectMarkers(frame)
         centers = CommuniVision.arucoCenters(corners[0])
         quadrants = CommuniVision.determineQuadrant(centers, comandCamera.resolution)
