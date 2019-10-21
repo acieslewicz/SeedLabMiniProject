@@ -15,8 +15,9 @@ if __name__ == "__main__":
     for image in comandCamera.camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
         frame = image.array
         corners = CommuniVision.detectMarkers(frame)
-#        rvecs, tvecs, _objPoints = cv2.aruco.estimatePoseSingleMarkers(corners[0], 83, comandCamera.intrinsic_params, comandCamera.distortion)
-#        print(rvecs)
+        rvecs, tvecs, _objPoints = cv2.aruco.estimatePoseSingleMarkers(corners[0], 83, comandCamera.intrinsic_params, comandCamera.distortion)
+        print(tvecs)
+
         
         if len(corners[0]) > 0:
             distance = CommuniVision.calculateDistance(comandCamera.focal_lengths, corners[0], [83, 83], comandCamera.resolution, comandCamera.sensor_dimensions)
