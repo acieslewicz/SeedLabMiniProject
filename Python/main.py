@@ -19,7 +19,8 @@ if __name__ == "__main__":
         count = count + 1
         corners = CommuniVision.detectMarkers(frame)
 
-        distance = CommuniVision.calculateDistance(comandCamera.focal_lengths, corners, 1, comandCamera.resolution, comandCamera.resolution)
+        distance = CommuniVision.calculateDistance(comandCamera.focal_lengths, corners, [83, 83], comandCamera.resolution, comandCamera.resolution)
+        print(distance)
 
         #Show the image stream
         cv2.imshow("Video", frame)
