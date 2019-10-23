@@ -55,7 +55,7 @@
   int16_t motorSpeedLeftInt = 0;
   int16_t motorSpeedRightInt = 0;
   int16_t stringToInt;
-  int distance = 10;
+  double distance = 1;
   float angle = 0;
   int first = 0;
 
@@ -63,7 +63,7 @@
 //////////////////////////////////////////////
 void setup()
 {
-  Serial.begin(115200);  // set up serial so we can output state
+  Serial.begin(9600);  // set up serial so we can output state
   pinMode(MotorVoltageA, OUTPUT);  //set motor speed and dir pins as output
   pinMode(VoltageSignA, OUTPUT);
   pinMode(MotorVoltageB, OUTPUT);
