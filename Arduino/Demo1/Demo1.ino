@@ -55,15 +55,17 @@
   int16_t motorSpeedLeftInt = 0;
   int16_t motorSpeedRightInt = 0;
   int16_t stringToInt;
-  double distance = 1;
-  float angle = 0;
-  int first = 0;
+  double distance = 3;
+  float angle = PI/8;
+  int circle = 0;
+  bool useSecondary = 0;
+  double secDistance = 5.939;
+ 
 
 
 //////////////////////////////////////////////
-void setup()
-{
-  Serial.begin(9600);  // set up serial so we can output state
+void setup(){
+  Serial.begin(115200);  // set up serial so we can output state
   pinMode(MotorVoltageA, OUTPUT);  //set motor speed and dir pins as output
   pinMode(VoltageSignA, OUTPUT);
   pinMode(MotorVoltageB, OUTPUT);
@@ -82,113 +84,17 @@ void setup()
   // The loop function reads encoder position and calculated needed speed and direction to get to desired position
 void loop(){
 
-   if(angle != 0){
-      neededPositionLeft = -1*(1.46*angle);
-      neededPositionRight = (1.46*angle);
-     encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
-      encoderPositionRight = rightWheel.read();
-      // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
-      encoderRadiansLeft = (encoderPositionLeft/CountsPerRev)*2*PI;    //modulus and converting to radians
-      encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
-      positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
-      positionErrorRight = neededPositionRight - encoderRadiansRight;
-      integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
-      integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
-      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
-      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
-      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
-        motorSpeedLeft = -150;
-      }
-      else if(motorSpeedLeft > 150){
-        motorSpeedLeft = 150;
-      }
-      else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
-        motorSpeedLeft = 0;
-      }
-      else if(motorSpeedLeft > -12 && motorSpeedLeft <= -3){  //boosting pwm to overcome friction
-        motorSpeedLeft -= 15;
-      }
-      else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
-        motorSpeedLeft += 15;
-      }
-      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
-        motorSpeedRight = -150;
-      } 
-      else if(motorSpeedRight > 150){
-        motorSpeedRight = 150;
-      } 
-      else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
-        motorSpeedRight = 0;
-      }
-      else if(motorSpeedRight > -12 && motorSpeedRight <= -3){  //boosting pwm to overcome friction
-        motorSpeedRight -= 15;
-      }
-      else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
-        motorSpeedRight += 15;
-      }
-      Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
-      Tc = millis();
-      
-      motorSpeedRightInt = (int)(motorSpeedRight);
-      motorSpeedLeftInt = (int)(motorSpeedLeft);
-      
-      motor(0,motorSpeedRightInt);
-      motor(1,motorSpeedLeftInt);
+    if(angle != 0){
+      angleFunc();
     }
-    if(distance != 0){
-      neededPositionLeft = ((distance*29.5)/(PI*wheelDiameter))*2*PI;
-      neededPositionRight = neededPositionLeft;
-      encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
-      encoderPositionRight = rightWheel.read();
-      // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
-      encoderRadiansLeft = (encoderPositionLeft/CountsPerRev)*2*PI;    //modulus and converting to radians
-      encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
-      positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
-      positionErrorRight = neededPositionRight - encoderRadiansRight;
-      integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
-      integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
-      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
-      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
+    else if(distance != 0){
+      FowardFunc();
+    }  
+    else if(secDistance != 0){
+      angle = PI/2;
+      angleFunc();
+      CircleFunc();
       
-      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
-        motorSpeedLeft = -150;
-      }
-      else if(motorSpeedLeft > 150){
-        motorSpeedLeft = 150;
-      }
-      else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
-        motorSpeedLeft = 0;
-      }
-      else if(motorSpeedLeft > -12 && motorSpeedLeft <= -3){  //boosting pwm to overcome friction
-        motorSpeedLeft -= 15;
-      }
-      else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
-        motorSpeedLeft += 15;
-      }
-      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
-        motorSpeedRight = -150;
-      } 
-      else if(motorSpeedRight > 150){
-        motorSpeedRight = 150;
-      } 
-      else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
-        motorSpeedRight = 0;
-      }
-      else if(motorSpeedRight > -12 && motorSpeedRight <= -3){  //boosting pwm to overcome friction
-        motorSpeedRight -= 15;
-      }
-      else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
-        motorSpeedRight += 15;
-      }
-      
-      Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
-      Tc = millis();
-      motorSpeedLeft = motorSpeedLeft*0.955 ;
-      motorSpeedRightInt = (int)(motorSpeedRight);
-      motorSpeedLeftInt = (int)(motorSpeedLeft);
-  
-      motor(0,motorSpeedRightInt);
-      motor(1,motorSpeedLeftInt);
     }
   
 
@@ -225,10 +131,235 @@ void motor(int motor, int16_t pwm){
       }
     }
 }
-
-
+///////////////////////////////////
+void angleFunc(){
+      Serial.println("Started Angle Func");
+      delay(3000);
+    while(angle != 0){
+      neededPositionLeft = -1*(1.46*angle);
+      neededPositionRight = (1.46*angle);
+      encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
+      encoderPositionRight = rightWheel.read();
+      // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
+      encoderRadiansLeft = (encoderPositionLeft/CountsPerRev)*2*PI;    //modulus and converting to radians
+      encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
+      positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
+      positionErrorRight = neededPositionRight - encoderRadiansRight;
+      integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
+      integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
+      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
+      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
+      }
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
+      }
+      else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
+        motorSpeedLeft = 0;
+      }
+      else if(motorSpeedLeft > -12 && motorSpeedLeft <= -3){  //boosting pwm to overcome friction
+        motorSpeedLeft -= 15;
+      }
+      else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
+        motorSpeedLeft += 15;
+      }
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
+      } 
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
+      } 
+      else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
+        motorSpeedRight = 0;
+      }
+      else if(motorSpeedRight > -12 && motorSpeedRight <= -3){  //boosting pwm to overcome friction
+        motorSpeedRight -= 15;
+      }
+      else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
+        motorSpeedRight += 15;
+      }
+      Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
+      Tc = millis();
+      
+      motorSpeedRightInt = (int)(motorSpeedRight);
+      motorSpeedLeftInt = (int)(motorSpeedLeft);
+      
+      motor(0,motorSpeedRightInt);
+      motor(1,motorSpeedLeftInt);
+      if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
+        angle = 0;
+        encoderPositionLeft = 0;
+        encoderPositionRight = 0;
+        encoderRadiansRight = 0;
+        encoderRadiansLeft = 0;
+        integralErrorRight = 0;
+        integralErrorLeft = 0;
+        positionErrorRight = 0;
+        positionErrorLeft = 0;
+        leftWheel.write(0);
+        rightWheel.write(0);
+        Serial.println("Finished Angle Func");
+        delay(3000);
+      }
+    }
+}
 
 //////////////////////////////////////////////
+   void FowardFunc(){   
+     Serial.println("Started Forward Func");
+     delay(3000);
+    while(distance != 0){
+      neededPositionLeft = ((distance*29.5)/(PI*wheelDiameter))*2*PI;
+      neededPositionRight = neededPositionLeft;
+      encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
+      encoderPositionRight = rightWheel.read();
+      // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
+      encoderRadiansLeft = (encoderPositionLeft/CountsPerRev)*2*PI;    //modulus and converting to radians
+      encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
+      positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
+      positionErrorRight = neededPositionRight - encoderRadiansRight;
+      integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
+      integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
+      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
+      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
+      //Serial.println((double)(encoderPositionRight));
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
+      }
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
+      }
+      else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
+        motorSpeedLeft = 0;
+      }
+      else if(motorSpeedLeft > -12 && motorSpeedLeft <= -3){  //boosting pwm to overcome friction
+        motorSpeedLeft -= 15;
+      }
+      else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
+        motorSpeedLeft += 15;
+      }
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
+      } 
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
+      } 
+      else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
+        motorSpeedRight = 0;
+      }
+      else if(motorSpeedRight > -12 && motorSpeedRight <= -3){  //boosting pwm to overcome friction
+        motorSpeedRight -= 15;
+      }
+      else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
+        motorSpeedRight += 15;
+      }
+      
+      Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
+      Tc = millis();
+      motorSpeedLeft = motorSpeedLeft*0.955 ;
+
+      motorSpeedRightInt = (int)(motorSpeedRight);
+      motorSpeedLeftInt = (int)(motorSpeedLeft);
+  
+      motor(0,motorSpeedRightInt);
+      motor(1,motorSpeedLeftInt);
+      if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
+        distance = 0;
+        encoderPositionLeft = 0;
+        encoderPositionRight = 0;
+        encoderRadiansRight = 0;
+        encoderRadiansLeft = 0;
+        integralErrorRight = 0;
+        integralErrorLeft = 0;
+        positionErrorRight = 0;
+        positionErrorLeft = 0;
+        leftWheel.write(0);
+        rightWheel.write(0);
+        Serial.println("Finished Forward Func");
+        delay(3000);
+      }
+    }
+   }
+
+//////////////////////////////////////////////
+void CircleFunc(){   
+     Serial.println("Circle Function Started");
+     delay(3000); 
+    while(secDistance != 0){
+      neededPositionRight = ((secDistance*29.5)/(PI*wheelDiameter))*2*PI;
+      neededPositionLeft = neededPositionRight/4.84;
+      encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
+      encoderPositionRight = rightWheel.read();
+      // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
+      encoderRadiansLeft = (encoderPositionLeft/CountsPerRev)*2*PI;    //modulus and converting to radians
+      encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
+      positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
+      positionErrorRight = neededPositionRight - encoderRadiansRight;
+      integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
+      integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
+      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
+      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
+      //Serial.println((double)(encoderPositionRight));
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
+      }
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
+      }
+      else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
+        motorSpeedLeft = 0;
+      }
+      else if(motorSpeedLeft > -12 && motorSpeedLeft <= -3){  //boosting pwm to overcome friction
+        motorSpeedLeft -= 15;
+      }
+      else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
+        motorSpeedLeft += 15;
+      }
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
+      } 
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
+      } 
+      else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
+        motorSpeedRight = 0;
+      }
+      else if(motorSpeedRight > -12 && motorSpeedRight <= -3){  //boosting pwm to overcome friction
+        motorSpeedRight -= 15;
+      }
+      else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
+        motorSpeedRight += 15;
+      }
+      
+      Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
+      Tc = millis();
+      motorSpeedLeft = motorSpeedLeft*0.955 ;
+      motorSpeedLeft = motorSpeedLeft/4.3;
+
+      motorSpeedRightInt = (int)(motorSpeedRight);
+      motorSpeedLeftInt = (int)(motorSpeedLeft);
+  
+      motor(0,motorSpeedRightInt);
+      motor(1,motorSpeedLeftInt);
+      if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
+        secDistance = 0;
+        encoderPositionLeft = 0;
+        encoderPositionRight = 0;
+        encoderRadiansRight = 0;
+        encoderRadiansLeft = 0;
+        integralErrorRight = 0;
+        integralErrorLeft = 0;
+        positionErrorRight = 0;
+        positionErrorLeft = 0;
+        leftWheel.write(0);
+        rightWheel.write(0);
+        Serial.println("Finished Circle Func");
+        delay(3000);
+      }
+    }
+   }
+  /////////////////////////////////////
 //This function reads the data sent over i2c
 void receiveData(int byteCount){
   int inputVal;
@@ -266,7 +397,8 @@ void recvString() {
  receivedString = Serial.readString();
  receivedString.trim();
  stringToInt = receivedString.toFloat();
- if(receivedString.charAt(0) == "-"){
+ char inputChar = receivedString.charAt(0);
+ if(inputChar == '-'){
    receivedString.remove(1,0);
    stringToInt = receivedString.toFloat();
    stringToInt = stringToInt*(-1);
