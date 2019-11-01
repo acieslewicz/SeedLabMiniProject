@@ -60,6 +60,11 @@
   int circle = 0;
   bool useSecondary = 0;
   double secDistance = 5.939;
+  int receivedDataCount = 0;
+  double angleInt;
+  double angleDec;
+  double distanceInt;
+  double distanceDec;
  
 
 
@@ -83,7 +88,8 @@ void setup(){
 //////////////////////////////////////////////
   // The loop function reads encoder position and calculated needed speed and direction to get to desired position
 void loop(){
-
+    while(receivedDataCount <4){
+    }
     if(angle != 0){
       angleFunc();
     }
@@ -362,15 +368,29 @@ void CircleFunc(){
   /////////////////////////////////////
 //This function reads the data sent over i2c
 void receiveData(int byteCount){
-  int inputVal;
+  double inputVal;
   while(Wire.available()) {
     if(state == 0){
       inputVal = Wire.read();
     }
-    if(inputVal != 0){
-      passedPos = inputVal-1;
-    }
-    
+      if(receivedDataCount == 0){ 
+       angleInt = inputVal;
+       receivedDataCount += 1;
+      }
+      if(receivedDataCount == 1){ 
+       angleDec = inputVal;
+       receivedDataCount += 1;
+       angle = angleInt + (angleDec/100)
+      }
+      if(receivedDataCount == 2){ 
+       distanceInt = inputVal;
+       receivedDataCount += 1;
+      }
+      if(receivedDataCount == 3){ 
+       distanceDec = inputVal;
+       receivedDataCount += 1;
+       distance = distanceInt + (distanceDec/100)
+      }
     
   }
   Serial.println(passedPos);

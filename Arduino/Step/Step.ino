@@ -3,10 +3,10 @@
 //of the motor, from which we can estimate a transfer function.
 
 #include <Encoder.h>
- #define MotorVoltageA 9
- #define MotorVoltageB   10
- #define VoltageSignA 7
- #define VoltageSignB 8
+ #define MotorVoltageA 10
+ #define MotorVoltageB   9
+ #define VoltageSignA 8
+ #define VoltageSignB 7
  #define Reset 4
  #define Fault 12
   #define pin1 2
@@ -47,7 +47,7 @@ void loop() {
   }
   while((millis() - totalPeriod) >= 3000 && (millis() - totalPeriod) <= 4000){ //insures the total running time is from 3 to 4 seconds after boot
       time_now = micros();
-      encoderPosition = myEnc.read(); 
+      encoderPosition = -1*myEnc.read(); 
       //encoderPosition = fmod(encoderPosition,CountsPerRev);
       //encoderRadians = (encoderPosition/CountsPerRev)*2*PI;
       Serial.print(encoderPosition);
