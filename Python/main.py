@@ -8,23 +8,26 @@ if __name__ == "__main__":
 
     comandCamera = CommuniVision.CommuniVision()
     rawCapture = PiRGBArray(comandCamera.camera)
-    
-    comandCamera.writeTopLine("D. Pos:")
-    comandCamera.writeBotLine("A. Pos:")
-    
-    count = 0
+
+    tempflag = 0
     for image in comandCamera.camera.capture_continuous(rawCapture, format='bgr', use_video_port=True):
         frame = image.array
         corners = CommuniVision.detectMarkers(frame)
-        rvecs, tvecs, _objPoints = cv2.aruco.estimatePoseSingleMarkers(corners[0], 3.0, comandCamera.intrinsic_params, comandCamera.distortion)
+        rvecs, tvecs, _objPoints = cv2.aruco.estimatePoseSingleMarkers(corners[0], 7.5, comandCamera.intrinsic_params, comandCamera.distortion)
 
-        print(tvecs)
         if tvecs is not None:
             print("Distance:",tvecs[0][0][2], "cm")
             angle = -np.arctan(tvecs[0][0][0]/tvecs[0][0][2])
-            print("Angle:", angle)
-            
-        
+            print("Angle:", round(angle*180/np.pi, 3))
+            comandCamera.writeTopLine("Marker Detected")
+            comandCamera.writeBotLine("Angle: " + str(round(angle*180/np.pi, 3)))
+            tempflag = 0
+        else:
+            if tempflag == 0:
+                comandCamera.lcd.clear()
+                tempflag=1
+                
+            comandCamera.writeTopLine("No Marker")
 
         #Show the image stream
         cv2.imshow("Video", frame)
