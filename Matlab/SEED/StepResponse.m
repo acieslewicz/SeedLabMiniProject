@@ -5,8 +5,8 @@
 %actual output values from the Serial output for time and radians/sec are
 %contained within testedXVals and testedYVals respectively.
 s = tf('s');
-K = 0.05529;
-sigma = 14.224;
+K = 0.04916;
+sigma = 17.5;
 load ("testedXVals.mat")
 load ("testedYVals.mat")
 transFunc = K*(sigma/(sigma + s)); 
