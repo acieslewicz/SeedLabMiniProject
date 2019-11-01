@@ -29,6 +29,8 @@ if __name__ == "__main__":
                 
             comandCamera.writeTopLine("No Marker")
 
+        comandCamera.send_block_data([1,2,3])
+
         #Show the image stream
         cv2.imshow("Video", frame)
         key = cv2.waitKey(1) & 0xFF

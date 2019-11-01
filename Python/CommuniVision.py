@@ -114,15 +114,15 @@ class CommuniVision:
         
         return actualPositionFloat
 
-    def sendValueandDisplay(self, quadrant):
-        if quadrant is not None:
-            self.lcd.clear()
-            self.writeTopLine("D. Pos:" + str(self.quadrant_2_position[quadrant-1]))
-             #Sends quandrant information to the arduino
-            try:
-                self.bus.write_byte(self.address, quadrant)
-            except:
-                pass
+    def send_block_data(self, data):
+        data = None
+        try:
+            #Reads floats up to messageSize - 1 digits from Arduino
+            bus.write_i2c_block_data(self.address, 0, [1,2,3,4])
+        except:
+            #print("Error Reading Data")
+            data = None
+            
         return
 
 #Image Processing
