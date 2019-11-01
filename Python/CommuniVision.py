@@ -171,24 +171,3 @@ def determineQuadrant(arucoCenters, resolution):
             quadrants.append(1)
 
     return quadrants
-
-def arucoMarkerDimension(arucoCorners):
-    width_1 = np.linalg.norm((arucoCorners[0][0][0] - arucoCorners[0][0][1]))
-    height_1 = np.linalg.norm((arucoCorners[0][0][1] - arucoCorners[0][0][2]))
-    
-    width_2 = np.linalg.norm((arucoCorners[0][0][2] - arucoCorners[0][0][3]))
-    height_2 = np.linalg.norm((arucoCorners[0][0][3] - arucoCorners[0][0][0]))
-
-    return (width_1+width_2)/2, (height_1+height_2)/2
-
-#Calculate distance using focal length and aruco marker dimensions
-def calculateDistance(focalLengths, arucoCorners, arucoMarkerDim_w, imageDim, sensorDim):
-    #Determine the dimensions of the Aruco Marker
-    markerWidth, markerHeight = arucoMarkerDimension(arucoCorners)
-
-    #Using the width and heigh determine the distance to the marker in mm
-    distance_height = (focalLengths[0]*arucoMarkerDim_w[0])/(markerWidth*sensorDim[0]/imageDim[0])
-    distance_width = (focalLengths[1]*arucoMarkerDim_w[1])/(markerHeight*sensorDim[1]/imageDim[1])
-    distanceToMarker = (distance_height + distance_width)/2
-
-    return distanceToMarker

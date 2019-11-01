@@ -20,11 +20,9 @@ if __name__ == "__main__":
 
         print(tvecs)
         if tvecs is not None:
-            print("Distance:",tvecs[0][0][2], "cm")
+            print("Distance:",tvecs[0][0][2], "in")
             angle = -np.arctan(tvecs[0][0][0]/tvecs[0][0][2])
             print("Angle:", angle)
-            
-        
 
         #Show the image stream
         cv2.imshow("Video", frame)
