@@ -29,7 +29,9 @@ if __name__ == "__main__":
                 
             comandCamera.writeTopLine("No Marker")
 
-        comandCamera.send_block_data([1,2,3])
+        send_data_ret = comandCamera.send_block_data([0,50,1,50])
+        if(send_data_ret == 1):
+            print("error sending data");
 
         #Show the image stream
         cv2.imshow("Video", frame)

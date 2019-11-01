@@ -89,7 +89,7 @@ class CommuniVision:
         data = None
         try:
             #Reads floats up to messageSize - 1 digits from Arduino
-            data = bus.read_i2c_block_data(self.address, 0, messageSize)
+            data = self.bus.read_i2c_block_data(self.address, 0, messageSize)
         except:
             #print("Error Reading Data")
             data = None
@@ -115,15 +115,15 @@ class CommuniVision:
         return actualPositionFloat
 
     def send_block_data(self, data):
-        data = None
-        try:
-            #Reads floats up to messageSize - 1 digits from Arduino
-            bus.write_i2c_block_data(self.address, 0, [1,2,3,4])
-        except:
-            #print("Error Reading Data")
-            data = None
+        success_code = 0;
+        if len(data) > 0:
+            try:
+                self.bus.write_i2c_block_data(self.address, 0, data)
+                print("test")
+            except:
+                success_code = 1;
             
-        return
+        return success_code
 
 #Image Processing
 def resizeImage(image, resizeRatio=0.5):
