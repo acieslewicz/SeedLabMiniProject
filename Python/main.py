@@ -36,7 +36,7 @@ if __name__ == "__main__":
         send_data_ret = comandCamera.send_block_data([angle_whole,angle_frac,dist_whole,dist_frac])
 
         if(send_data_ret == 1):
-            print("error sending data");
+            print("error sending data")
 
         #Show the image stream
         cv2.imshow("Video", frame)
