@@ -27,9 +27,9 @@
   #define pin3 3
   #define pin4 5
   #define i2c 13
-  float KpLeft = 500;  //proportional control
+  float KpLeft = 900;  //proportional control
   float KiLeft = 6;    //integral control
-  float KpRight = 500;  //proportional control
+  float KpRight = 900;  //proportional control
   float KiRight = 6;    //integral control
   long double integralErrorLeft = 0;
   long double integralErrorRight = 0;
@@ -54,17 +54,21 @@
   long double motorSpeedRight = 0; 
   int16_t motorSpeedLeftInt = 0;
   int16_t motorSpeedRightInt = 0;
+  int16_t motorSpeedLeftIntLast = 0;
+  int16_t motorSpeedRightIntLast = 0;
   int16_t stringToInt;
-  double distance = 3;
-  float angle = PI/8;
+  double distance = 0;
+  float angle = 0;
+  float angle2 = 0;
   int circle = 0;
   bool useSecondary = 0;
-  double secDistance = 5.939;
+  double secDistance = 7.05;
   int receivedDataCount = 0;
   double angleInt;
   double angleDec;
   double distanceInt;
   double distanceDec;
+  int firstSend = 0;
  
 
 
@@ -88,8 +92,9 @@ void setup(){
 //////////////////////////////////////////////
   // The loop function reads encoder position and calculated needed speed and direction to get to desired position
 void loop(){
-    while(receivedDataCount <4){
+    while(receivedDataCount <6){
       Serial.println("Waiting on you fucker...");
+      //receivedDataCount += 1;
       delay(1000);
     }
    
@@ -100,7 +105,7 @@ void loop(){
       FowardFunc();
     }  
     else if(secDistance != 0){
-      angle = PI/2;
+      angle = -PI/2;
       angleFunc();
       CircleFunc();
       
@@ -111,41 +116,38 @@ void loop(){
 
 //////////////////////////////////////////////
 // The motor function outputs the pwm value passed to it to the correct motor pin by analogWriting the value
-void motor(int motor, int16_t pwm){
-    if(motor == 0){
-      if(pwm > 0){    //this insures the positive pwms are sent as normal
+void motor(int16_t motorR, int16_t motorL){
+      if(motorR > 0){    //this insures the positive pwms are sent as normal
       digitalWrite(VoltageSignA, LOW);
-      analogWrite(MotorVoltageA, pwm);
+      analogWrite(MotorVoltageA, motorR);
       }
-      else if(pwm < 0){  // this insures negative pwm values are inverted before passing to pwm and the direction pin is set low to spin the opposite direction
+      else if(motorR < 0){  // this insures negative pwm values are inverted before passing to pwm and the direction pin is set low to spin the opposite direction
         digitalWrite(VoltageSignA, HIGH);
-        analogWrite(MotorVoltageA, -pwm);
+        analogWrite(MotorVoltageA, -motorR);
         }
       else{
         analogWrite(MotorVoltageA, 0);
       }
-    }
-    if(motor == 1){
-      if(pwm > 0){    //this insures the positive pwms are sent as normal
+    
+      if(motorL > 0){    //this insures the positive pwms are sent as normal
       digitalWrite(VoltageSignB, HIGH);
-      analogWrite(MotorVoltageB, pwm);
+      analogWrite(MotorVoltageB, motorL);
       }
-      else if(pwm < 0){  // this insures negative pwm values are inverted before passing to pwm and the direction pin is set low to spin the opposite direction
+      else if(motorL < 0){  // this insures negative pwm values are inverted before passing to pwm and the direction pin is set low to spin the opposite direction
         digitalWrite(VoltageSignB, LOW);
-        analogWrite(MotorVoltageB, -pwm);
+        analogWrite(MotorVoltageB, -motorL);
         }
       else{
         analogWrite(MotorVoltageB, 0);
       }
-    }
 }
 ///////////////////////////////////
 void angleFunc(){
       Serial.println("Started Angle Func");
       delay(1000);
     while(angle != 0){
-      neededPositionLeft = -1*(1.46*angle);
-      neededPositionRight = (1.46*angle);
+      neededPositionLeft = -1*(1.435*angle);
+      neededPositionRight = (1.435*angle);
       encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
       encoderPositionRight = rightWheel.read();
       // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
@@ -187,14 +189,25 @@ void angleFunc(){
       else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
         motorSpeedRight += 15;
       }
+      if((motorSpeedRightInt - motorSpeedRightIntLast) > 5){
+        motorSpeedRightInt = motorSpeedRightIntLast + 5;
+      }
+
+      if((motorSpeedLeftInt - motorSpeedLeftIntLast) > 5){
+        motorSpeedLeftInt = motorSpeedLeftIntLast + 5;
+      }
+
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
       
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
       
-      motor(0,motorSpeedRightInt);
-      motor(1,motorSpeedLeftInt);
+      motor(motorSpeedRightInt,motorSpeedLeftInt);
+      
+      motorSpeedLeftIntLast = motorSpeedLeftInt;
+      motorSpeedRightIntLast = motorSpeedRightInt;
+      
       if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
         angle = 0;
         encoderPositionLeft = 0;
@@ -205,6 +218,8 @@ void angleFunc(){
         integralErrorLeft = 0;
         positionErrorRight = 0;
         positionErrorLeft = 0;
+        motorSpeedLeftIntLast = 0;
+        motorSpeedRightIntLast = 0;
         leftWheel.write(0);
         rightWheel.write(0);
         Serial.println("Finished Angle Func");
@@ -262,16 +277,32 @@ void angleFunc(){
       else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
         motorSpeedRight += 15;
       }
+      if((motorSpeedRightInt - motorSpeedRightIntLast) > 1){
+        motorSpeedRightInt = motorSpeedRightIntLast + 1;
+      }
+
+      if((motorSpeedLeftInt - motorSpeedLeftIntLast) > 1){
+        motorSpeedLeftInt = motorSpeedLeftIntLast + 1;
+      }
+
       
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
-      motorSpeedLeft = motorSpeedLeft*0.955 ;
-
+      motorSpeedLeft = motorSpeedLeft*0.942 ;
+        if(angle > 0){
+          motorSpeedRight = motorSpeedRight*(1+ (motorSpeedRight*angle2)/10)
+        }
+        if(angle < 0){
+          motorSpeedLeft = motorSpeedLeft*(1+ (motorSpeedLeft*angle2)/10)
+        }
+  
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
-  
-      motor(0,motorSpeedRightInt);
-      motor(1,motorSpeedLeftInt);
+
+     
+      motor(motorSpeedRightInt,motorSpeedLeftInt);
+      motorSpeedLeftIntLast = motorSpeedLeftInt;
+      motorSpeedRightIntLast = motorSpeedRightInt;
       if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
         distance = 0;
         encoderPositionLeft = 0;
@@ -282,6 +313,8 @@ void angleFunc(){
         integralErrorLeft = 0;
         positionErrorRight = 0;
         positionErrorLeft = 0;
+        motorSpeedLeftIntLast = 0;
+        motorSpeedRightIntLast = 0;
         leftWheel.write(0);
         rightWheel.write(0);
         Serial.println("Finished Forward Func");
@@ -296,7 +329,7 @@ void CircleFunc(){
      delay(1000); 
     while(secDistance != 0){
       neededPositionRight = ((secDistance*29.5)/(PI*wheelDiameter))*2*PI;
-      neededPositionLeft = neededPositionRight/4.84;
+      neededPositionLeft = neededPositionRight/2;
       encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
       encoderPositionRight = rightWheel.read();
       // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
@@ -339,17 +372,26 @@ void CircleFunc(){
       else if(motorSpeedRight >= 3 && motorSpeedRight < 12){
         motorSpeedRight += 15;
       }
+      if((motorSpeedRightInt - motorSpeedRightIntLast) > 5){
+        motorSpeedRightInt = motorSpeedRightIntLast + 15;
+      }
+  
+      if((motorSpeedLeftInt - motorSpeedLeftIntLast) > 5){
+        motorSpeedLeftInt = motorSpeedLeftIntLast + 5;
+      }
+
       
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
       motorSpeedLeft = motorSpeedLeft*0.955 ;
-      motorSpeedLeft = motorSpeedLeft/4.3;
+      motorSpeedLeft = motorSpeedLeft/1.4;
 
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
   
-      motor(0,motorSpeedRightInt);
-      motor(1,motorSpeedLeftInt);
+      motor(motorSpeedRightInt,motorSpeedLeftInt);
+      motorSpeedLeftIntLast = motorSpeedLeftInt;
+      motorSpeedRightIntLast = motorSpeedRightInt;
       if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
         secDistance = 0;
         encoderPositionLeft = 0;
@@ -360,6 +402,8 @@ void CircleFunc(){
         integralErrorLeft = 0;
         positionErrorRight = 0;
         positionErrorLeft = 0;
+        motorSpeedLeftIntLast = 0;
+        motorSpeedRightIntLast = 0;
         leftWheel.write(0);
         rightWheel.write(0);
         Serial.println("Finished Circle Func");
@@ -371,18 +415,29 @@ void CircleFunc(){
 //This function reads the data sent over i2c
 void receiveData(int byteCount){
   (void) Wire.read();
-  double inputVal[4];
+  double inputVal[6];
   while(Wire.available()) {
     inputVal[receivedDataCount++] = Wire.read();
   }
-  angleInt = inputVal[0];
-  angleDec = inputVal[1];
-  distanceInt = inputVal[2];
-  distanceDec = inputVal[3];
-  angle = angleInt + angleDec/100;
+  angleInt = inputVal[1];
+  angleDec = inputVal[2];
+  double angleTemp = inputVal[3];
+  distanceInt = inputVal[4];
+  distanceDec = inputVal[5];
+  if(firstSend == 0){
+    angle = angleInt + angleDec/100 + angleTemp/10000;
+    firstSend = 1;
+  }
+  else if(firstSend == 1){
+    angle2 = angleInt + angleDec/100 + angleTemp/10000;
+  }
+  if(inputVal[0] == 1){
+    angle = angle*-1;
+  }
   distance = distanceInt + distanceDec/100;
+  receivedDataCount = 0;
   Serial.print("Angle is: ");
-  Serial.println(angle);
+  Serial.println(angle,4);
   Serial.print("Distance is: ");
   Serial.println(distance);
   
