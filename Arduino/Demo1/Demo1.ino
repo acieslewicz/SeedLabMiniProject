@@ -89,7 +89,10 @@ void setup(){
   // The loop function reads encoder position and calculated needed speed and direction to get to desired position
 void loop(){
     while(receivedDataCount <4){
+      Serial.println("Waiting on you fucker...");
+      delay(1000);
     }
+   
     if(angle != 0){
       angleFunc();
     }
@@ -102,8 +105,7 @@ void loop(){
       CircleFunc();
       
     }
-  
-
+ 
  
 }
 
@@ -140,7 +142,7 @@ void motor(int motor, int16_t pwm){
 ///////////////////////////////////
 void angleFunc(){
       Serial.println("Started Angle Func");
-      delay(3000);
+      delay(1000);
     while(angle != 0){
       neededPositionLeft = -1*(1.46*angle);
       neededPositionRight = (1.46*angle);
@@ -206,7 +208,7 @@ void angleFunc(){
         leftWheel.write(0);
         rightWheel.write(0);
         Serial.println("Finished Angle Func");
-        delay(3000);
+        delay(1000);
       }
     }
 }
@@ -214,7 +216,7 @@ void angleFunc(){
 //////////////////////////////////////////////
    void FowardFunc(){   
      Serial.println("Started Forward Func");
-     delay(3000);
+     delay(1000);
     while(distance != 0){
       neededPositionLeft = ((distance*29.5)/(PI*wheelDiameter))*2*PI;
       neededPositionRight = neededPositionLeft;
@@ -283,7 +285,7 @@ void angleFunc(){
         leftWheel.write(0);
         rightWheel.write(0);
         Serial.println("Finished Forward Func");
-        delay(3000);
+        delay(1000);
       }
     }
    }
@@ -291,7 +293,7 @@ void angleFunc(){
 //////////////////////////////////////////////
 void CircleFunc(){   
      Serial.println("Circle Function Started");
-     delay(3000); 
+     delay(1000); 
     while(secDistance != 0){
       neededPositionRight = ((secDistance*29.5)/(PI*wheelDiameter))*2*PI;
       neededPositionLeft = neededPositionRight/4.84;
@@ -361,39 +363,29 @@ void CircleFunc(){
         leftWheel.write(0);
         rightWheel.write(0);
         Serial.println("Finished Circle Func");
-        delay(3000);
+        delay(1000);
       }
     }
    }
   /////////////////////////////////////
 //This function reads the data sent over i2c
 void receiveData(int byteCount){
-  double inputVal;
+  (void) Wire.read();
+  double inputVal[4];
   while(Wire.available()) {
-    if(state == 0){
-      inputVal = Wire.read();
-    }
-      if(receivedDataCount == 0){ 
-       angleInt = inputVal;
-       receivedDataCount += 1;
-      }
-      if(receivedDataCount == 1){ 
-       angleDec = inputVal;
-       receivedDataCount += 1;
-       angle = angleInt + (angleDec/100)
-      }
-      if(receivedDataCount == 2){ 
-       distanceInt = inputVal;
-       receivedDataCount += 1;
-      }
-      if(receivedDataCount == 3){ 
-       distanceDec = inputVal;
-       receivedDataCount += 1;
-       distance = distanceInt + (distanceDec/100)
-      }
-    
+    inputVal[receivedDataCount++] = Wire.read();
   }
-  Serial.println(passedPos);
+  angleInt = inputVal[0];
+  angleDec = inputVal[1];
+  distanceInt = inputVal[2];
+  distanceDec = inputVal[3];
+  angle = angleInt + angleDec/100;
+  distance = distanceInt + distanceDec/100;
+  Serial.print("Angle is: ");
+  Serial.println(angle);
+  Serial.print("Distance is: ");
+  Serial.println(distance);
+  
 }
 
 //////////////////////////////////////////////

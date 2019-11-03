@@ -31,9 +31,15 @@ if __name__ == "__main__":
                 
             comandCamera.writeTopLine("No Marker")
 
+<<<<<<< HEAD
         angle_frac, angle_whole = math.modf(round(angle, 2))
         dist_frac, dist_whole = math.modf(round(distance, 2))
         comandCamera.send_block_data([angle_whole,angle_frac,dist_whole,dist_frac])
+=======
+        send_data_ret = comandCamera.send_block_data([0,50,1,50])
+        if(send_data_ret == 1):
+            print("error sending data");
+>>>>>>> ab6594c6527bbfacfcc08f6ce7a9bacd468c0b9d
 
         #Show the image stream
         cv2.imshow("Video", frame)
