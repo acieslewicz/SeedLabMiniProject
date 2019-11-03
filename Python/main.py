@@ -1,5 +1,6 @@
 import CommuniVision
 import cv2
+import math
 import numpy as np
 from picamera.array import PiRGBArray
 
@@ -16,6 +17,7 @@ if __name__ == "__main__":
         rvecs, tvecs, _objPoints = cv2.aruco.estimatePoseSingleMarkers(corners[0], 7.5, comandCamera.intrinsic_params, comandCamera.distortion)
 
         if tvecs is not None:
+            distance = tvecs[0][0][2]
             print("Distance:",tvecs[0][0][2], "in")
             angle = -np.arctan(tvecs[0][0][0]/tvecs[0][0][2])
             print("Angle:", round(angle*180/np.pi, 3))
@@ -29,7 +31,9 @@ if __name__ == "__main__":
                 
             comandCamera.writeTopLine("No Marker")
 
-        comandCamera.send_block_data([1,2,3])
+        angle_frac, angle_whole = math.modf(round(angle, 2))
+        dist_frac, dist_whole = math.modf(round(distance, 2))
+        comandCamera.send_block_data([angle_whole,angle_frac,dist_whole,dist_frac])
 
         #Show the image stream
         cv2.imshow("Video", frame)
