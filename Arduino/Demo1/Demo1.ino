@@ -62,7 +62,7 @@
   float angle2 = 0;
   int circle = 0;
   bool useSecondary = 0;
-  double secDistance = 7.05;
+  double secDistance = 7.5;
   int receivedDataCount = 0;
   double angleInt;
   double angleDec;
@@ -92,7 +92,7 @@ void setup(){
 //////////////////////////////////////////////
   // The loop function reads encoder position and calculated needed speed and direction to get to desired position
 void loop(){
-    while(receivedDataCount <6){
+    while(firstSend == 0){
       Serial.println("Waiting on you fucker...");
       //receivedDataCount += 1;
       delay(1000);
@@ -146,8 +146,8 @@ void angleFunc(){
       Serial.println("Started Angle Func");
       delay(1000);
     while(angle != 0){
-      neededPositionLeft = -1*(1.435*angle);
-      neededPositionRight = (1.435*angle);
+      neededPositionLeft = -1*(1.434*angle);
+      neededPositionRight = (1.434*angle);
       encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
       encoderPositionRight = rightWheel.read();
       // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
@@ -288,18 +288,20 @@ void angleFunc(){
       
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
-      motorSpeedLeft = motorSpeedLeft*0.942 ;
-        if(angle > 0){
-          motorSpeedRight = motorSpeedRight*(1+ (motorSpeedRight*angle2)/10)
+      motorSpeedLeft = motorSpeedLeft*0.947 ;
+        if(angle2 < 0){
+          motorSpeedRight = ((1-abs(angle2)/2)*motorSpeedRight);
         }
-        if(angle < 0){
-          motorSpeedLeft = motorSpeedLeft*(1+ (motorSpeedLeft*angle2)/10)
+        if(angle2 > 0){
+          motorSpeedLeft = ((1-abs(angle2)/2)*motorSpeedLeft);
         }
   
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
-
-     
+      
+     //Serial.print(motorSpeedRightInt);
+     //Serial.print("; ");
+     //Serial.println(motorSpeedLeftInt);
       motor(motorSpeedRightInt,motorSpeedLeftInt);
       motorSpeedLeftIntLast = motorSpeedLeftInt;
       motorSpeedRightIntLast = motorSpeedRightInt;
@@ -329,7 +331,7 @@ void CircleFunc(){
      delay(1000); 
     while(secDistance != 0){
       neededPositionRight = ((secDistance*29.5)/(PI*wheelDiameter))*2*PI;
-      neededPositionLeft = neededPositionRight/2;
+      neededPositionLeft = neededPositionRight/2.49;
       encoderPositionLeft = -1*leftWheel.read();     //Reads current encoder position
       encoderPositionRight = rightWheel.read();
       // do not use encoderPosition = fmod(encoderPosition,CountsPerRev);
@@ -384,7 +386,7 @@ void CircleFunc(){
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
       motorSpeedLeft = motorSpeedLeft*0.955 ;
-      motorSpeedLeft = motorSpeedLeft/1.4;
+      motorSpeedLeft = motorSpeedLeft/2.25;
 
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
@@ -426,15 +428,22 @@ void receiveData(int byteCount){
   distanceDec = inputVal[5];
   if(firstSend == 0){
     angle = angleInt + angleDec/100 + angleTemp/10000;
+    if(inputVal[0] == 1){
+      angle = angle*-1;
+    }
+    Serial.println(angle);
     firstSend = 1;
+    distance = distanceInt + distanceDec/100;
   }
   else if(firstSend == 1){
     angle2 = angleInt + angleDec/100 + angleTemp/10000;
+    if(inputVal[0] == 1){
+      angle2 = angle2*-1;
+    }
+    Serial.print("SecAngle: ");
+    Serial.println(angle2);
   }
-  if(inputVal[0] == 1){
-    angle = angle*-1;
-  }
-  distance = distanceInt + distanceDec/100;
+  
   receivedDataCount = 0;
   Serial.print("Angle is: ");
   Serial.println(angle,4);
