@@ -27,6 +27,7 @@
   #define pin3 3
   #define pin4 5
   #define i2c 13
+  #define pin0 0
   float KpLeft = 900;  //proportional control
   float KiLeft = 6;    //integral control
   float KpRight = 900;  //proportional control
@@ -83,6 +84,7 @@ void setup(){
   pinMode(VoltageSignB, OUTPUT);
   pinMode(Reset,OUTPUT);  
   pinMode(Fault,INPUT);
+  pinMode(pin0,INPUT_PULLUP);
   digitalWrite(Reset, HIGH);
   pinMode(i2c,OUTPUT);
   Wire.begin(SLAVE_ADDRESS);
@@ -97,7 +99,12 @@ void loop(){
     while(firstSend == 0){
       Serial.println("Waiting on you fucker...");
       //receivedDataCount += 1;
-      angle = PI/7;
+      if(digitalRead(pin0) == 1){
+        angle = PI/7;
+      }
+      else{
+        angle = -PI/7;
+      }
       angleFunc();
       angle = 0;
       delay(1700);
