@@ -28,15 +28,23 @@
   #define pin3 3
   #define pin4 5
   #define i2c 13
-  #define pin0 0
-  float KpLeft = 900;  //proportional control
-  float KiLeft = 6;    //integral control
-  float KpRight = 900;  //proportional control
-  float KiRight = 6;    //integral control
+  #define pin0 1
+  float KpLeft = 150;  //proportional control
+  float KiLeft = 15;    //integral control
+  float KpRight = 150;  //proportional control
+  float KiRight = 15;    //integral control
+  float KDLeft = 110;    //integral control
+  float KDRight = 110;  //proportional control
   long double integralErrorLeft = 0;
   long double integralErrorRight = 0;
   long double positionErrorLeft;
   long double positionErrorRight;
+  long double PrevpositionErrorLeft;
+  long double PrevpositionErrorRight;
+  long double DerivErrorLeft;
+  long double DerivErrorRight;
+  float KDLeft = 100;    //integral control
+  float KDRight = 100;  //proportional control
   int passedPos = 0;
   float Ts = 0;
   float Tc = millis();
@@ -82,6 +90,7 @@
   int fourthLeg = 0;
   int fifthLeg = 0;
   int sixthLeg = 0;
+  int STOP = 0;
 
 
 //////////////////////////////////////////////
@@ -106,16 +115,6 @@ void setup(){
   // The loop function reads encoder position and calculated needed speed and direction to get to desired position
 void loop(){
     while(firstSend == 0){
-      Serial.println("Waiting on you fucker...");
-      //receivedDataCount += 1;
-      if(digitalRead(pin0) == 0){
-       angleFunc((PI/7));
-      }
-      else{
-        angleFunc((-PI/7));
-      }
-      delay(1700);
-      //receivedDataCount += 1;
     }
    
     if(Piangle != 0){
@@ -130,10 +129,12 @@ void loop(){
     if(firstLeg == 0){
       Piangle = 0;
       Pidistance = 0;
-      while(Piangle == 0){
+      while(STOP == 0){
         angleFunc((PI/7));
-        delay(1700);
+        delay(1000);
       }
+      while(Piangle == 0);
+      STOP = 0;
       angle = Piangle;
       distance = Pidistance;
       angle = angle - atan(0.5/distance);
@@ -146,10 +147,12 @@ void loop(){
     if(secondLeg == 0){
       Piangle = 0;
       Pidistance = 0;
-      while(Piangle == 0){
+      while(STOP == 0){
         angleFunc((PI/7));
-        delay(1700);
+        delay(1000);
       }
+      while(Piangle == 0);
+      STOP = 0;
       angle = Piangle;
       distance = Pidistance;
       angle = angle - atan(0.5/distance);
@@ -162,10 +165,12 @@ void loop(){
     if(thirdLeg == 0){
       Piangle = 0;
       Pidistance = 0;
-      while(Piangle == 0){
+      while(STOP == 0){
         angleFunc((PI/7));
-        delay(1700);
+        delay(1000);
       }
+      while(Piangle == 0);
+      STOP = 0;
       angle = Piangle;
       distance = Pidistance;
       angle = angle - atan(0.5/distance);
@@ -178,10 +183,12 @@ void loop(){
     if(fourthLeg == 0){
       Piangle = 0;
       Pidistance = 0;
-      while(Piangle == 0){
+      while(STOP == 0){
         angleFunc((PI/7));
-        delay(1700);
+        delay(1000);
       }
+      while(Piangle == 0);
+      STOP = 0;
       angle = Piangle;
       distance = Pidistance;
       angle = angle - atan(0.5/distance);
@@ -194,10 +201,12 @@ void loop(){
     if(fifthLeg == 0){
       Piangle = 0;
       Pidistance = 0;
-      while(Piangle == 0){
+      while(STOP == 0){
         angleFunc((PI/7));
-        delay(1700);
+        delay(1000);
       }
+      while(Piangle == 0);
+      STOP = 0;
       angle = Piangle;
       distance = Pidistance;
       angle = angle - atan(0.5/distance);
@@ -210,10 +219,12 @@ void loop(){
     if(sixthLeg == 0){
       Piangle = 0;
       Pidistance = 0;
-      while(Piangle == 0){
+      while(STOP == 0){
         angleFunc((PI/7));
-        delay(1700);
+        delay(1000);
       }
+      while(Piangle == 0);
+      STOP = 0;
       angle = Piangle;
       distance = Pidistance;
       angle = angle - atan(0.5/distance);
@@ -265,6 +276,16 @@ void angleFunc(float inAngle){
       encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
       positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
       positionErrorRight = neededPositionRight - encoderRadiansRight;
+      if(Ts > 0){
+        DerivErrorLeft = (positionErrorLeft - PrevpositionErrorLeft)/Ts;
+        DerivErrorRight = (positionErrorRight - PrevpositionErrorRight)/Ts;
+      }
+      else{
+         DerivErrorLeft = 0;
+        DerivErrorRight = 0;
+      }
+      PrevpositionErrorLeft = positionErrorLeft;
+      PrevpositionErrorRight = positionErrorRight;
       integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
       integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
       motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
@@ -350,6 +371,16 @@ void angleFunc(float inAngle){
       encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
       positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
       positionErrorRight = neededPositionRight - encoderRadiansRight;
+      if(Ts > 0){
+        DerivErrorLeft = (positionErrorLeft - PrevpositionErrorLeft)/Ts;
+        DerivErrorRight = (positionErrorRight - PrevpositionErrorRight)/Ts;
+      }
+      else{
+         DerivErrorLeft = 0;
+        DerivErrorRight = 0;
+      }
+      PrevpositionErrorLeft = positionErrorLeft;
+      PrevpositionErrorRight = positionErrorRight;
       integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
       integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
       motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
@@ -449,36 +480,33 @@ void receiveData(int byteCount){
   while(Wire.available()) {
     inputVal[receivedDataCount++] = Wire.read();
   }
-  angleInt = inputVal[1];
-  angleDec = inputVal[2];
-  double angleTemp = inputVal[3];
-  distanceInt = inputVal[4];
-  distanceDec = inputVal[5];
-  if(firstSend == 0){
-    firstSend = 1;
-    Piangle = angleInt + angleDec/100 + angleTemp/10000;
-    if(inputVal[0] == 1){
-      Piangle = angle*-1;
+  if(inputVal[0] == 2){
+    STOP = 1;
+  }
+  else{
+    angleInt = inputVal[1];
+    angleDec = inputVal[2];
+    double angleTemp = inputVal[3];
+    distanceInt = inputVal[4];
+    distanceDec = inputVal[5];
+    if(firstSend == 0){
+      
+      angle = angleInt + angleDec/100 + angleTemp/10000;
+      if(inputVal[0] == 1){
+        angle = angle*-1;
+      }
+      distance = distanceInt + distanceDec/100;
+      firstSend = 1;
     }
-    Serial.println(angle);
+    else if(firstSend == 1){
+      angle2 = angleInt + angleDec/100 + angleTemp/10000;
+      if(inputVal[0] == 1){
+        angle2 = angle2*-1;
+      }
+    }
     
-    Pidistance = distanceInt + distanceDec/100;
+    receivedDataCount = 0;
   }
-  else if(firstSend == 1){
-    angle2 = angleInt + angleDec/100 + angleTemp/10000;
-    if(inputVal[0] == 1){
-      angle2 = angle2*-1;
-    }
-    Serial.print("SecAngle: ");
-    Serial.println(angle2);
-  }
-  
-  receivedDataCount = 0;
-  Serial.print("Angle is: ");
-  Serial.println(angle,4);
-  Serial.print("Distance is: ");
-  Serial.println(distance);
-  
 }
 
 //////////////////////////////////////////////
