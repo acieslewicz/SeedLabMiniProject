@@ -28,12 +28,12 @@
   #define pin4 5
   #define i2c 13
   #define ChangeDirect 11
-  float KpLeft = 150;  //proportional control
-  float KiLeft = 15;    //integral control
-  float KpRight = 150;  //proportional control
-  float KiRight = 15;    //integral control
-  float KDLeft = 110;    //integral control
-  float KDRight = 110;  //proportional control
+  float KpLeft = 200;  //proportional control
+  float KiLeft = 0;    //integral control
+  float KpRight = 220;  //proportional control
+  float KiRight = 0;    //integral control
+  float KDLeft = 9;    //integral control
+  float KDRight = 10;  //proportional control
   long double integralErrorLeft = 0;
   long double integralErrorRight = 0;
   long double positionErrorLeft;
@@ -70,8 +70,8 @@
   float angle2Prev = 0;
   int circle = 0;
   bool useSecondary = 0;
-  double secDistance = 8.57;//8.62;//7.5;
-  double secDistanceInner = 3.926;
+  double secDistance = 8.61;//8.62;//7.5;
+  double secDistanceInner = 3.94;
   int receivedDataCount = 0;
   double angleInt;
   double angleDec;
@@ -105,10 +105,10 @@ void setup(){
 void loop(){
    while(STOP == 0){
       if(digitalRead(ChangeDirect) == 0){
-        angle = PI/7;
+        angle = PI/6;
       }
       else{
-        angle = -PI/7;
+        angle = -PI/6;
       }
       angleFunc();
       angle = 0;
@@ -191,30 +191,30 @@ void angleFunc(){
       motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft) + (KDLeft*DerivErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
       motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight) + (KDRight*DerivErrorRight));
       
-      if(motorSpeedLeft < -250){ //bounding motor speed to usable pwm values
-        motorSpeedLeft = -250;
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
       }
-      else if(motorSpeedLeft > 250){
-        motorSpeedLeft = 250;
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
       }
-      else if(motorSpeedLeft > -1 && motorSpeedLeft < 1){ //turns motor off too get rid of motor whine
-        motorSpeedLeft = 0;
-      }
+//      else if(motorSpeedLeft > -1 && motorSpeedLeft < 1){ //turns motor off too get rid of motor whine
+//        motorSpeedLeft = 0;
+//      }
       else if(motorSpeedLeft > -12 && motorSpeedLeft <= -1){  //boosting pwm to overcome friction
         motorSpeedLeft -= 25;
       }
       else if(motorSpeedLeft >= 1 && motorSpeedLeft < 12){
         motorSpeedLeft += 25;
       }
-      if(motorSpeedRight < -250){ //bounding motor speed to usable pwm values
-        motorSpeedRight = -250;
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
       } 
-      else if(motorSpeedRight > 250){
-        motorSpeedRight = 250;
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
       } 
-      else if(motorSpeedRight > -1 && motorSpeedRight < 1){ //turns motor off too get rid of motor whine
-        motorSpeedRight = 0;
-      }
+//      else if(motorSpeedRight > -1 && motorSpeedRight < 1){ //turns motor off too get rid of motor whine
+//        motorSpeedRight = 0;
+//      }
       else if(motorSpeedRight > -12 && motorSpeedRight <= -1){  //boosting pwm to overcome friction
         motorSpeedRight -= 15;
       }
@@ -284,14 +284,14 @@ void angleFunc(){
       PrevpositionErrorRight = positionErrorRight;
       integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
       integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
-      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
-      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
+      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft) + (KDLeft*DerivErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
+      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight) + (KDRight*DerivErrorRight));
       //Serial.println((double)(encoderPositionRight));
-      if(motorSpeedLeft < -250){ //bounding motor speed to usable pwm values
-        motorSpeedLeft = -250;
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
       }
-      else if(motorSpeedLeft > 250){
-        motorSpeedLeft = 250;
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
       }
       else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
         motorSpeedLeft = 0;
@@ -302,11 +302,11 @@ void angleFunc(){
       else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
         motorSpeedLeft += 15;
       }
-      if(motorSpeedRight < -250){ //bounding motor speed to usable pwm values
-        motorSpeedRight = -250;
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
       } 
-      else if(motorSpeedRight > 250){
-        motorSpeedRight = 250;
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
       } 
       else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
         motorSpeedRight = 0;
@@ -396,14 +396,14 @@ void CircleFunc(){
       PrevpositionErrorRight = positionErrorRight;
       integralErrorLeft = integralErrorLeft + ((Ts*positionErrorLeft)/1000); //implementing the integral error accumulation
       integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
-      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
-      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight));
+      motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft) + (KDLeft*DerivErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
+      motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight) + (KDRight*DerivErrorRight));
       //Serial.println((double)(encoderPositionRight));
-      if(motorSpeedLeft < -250){ //bounding motor speed to usable pwm values
-        motorSpeedLeft = -250;
+      if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
+        motorSpeedLeft = -150;
       }
-      else if(motorSpeedLeft > 250){
-        motorSpeedLeft = 250;
+      else if(motorSpeedLeft > 150){
+        motorSpeedLeft = 150;
       }
       else if(motorSpeedLeft > -3 && motorSpeedLeft < 3){ //turns motor off too get rid of motor whine
         motorSpeedLeft = 0;
@@ -414,11 +414,11 @@ void CircleFunc(){
       else if(motorSpeedLeft >= 3 && motorSpeedLeft < 12){
         motorSpeedLeft += 15;
       }
-      if(motorSpeedRight < -250){ //bounding motor speed to usable pwm values
-        motorSpeedRight = -250;
+      if(motorSpeedRight < -150){ //bounding motor speed to usable pwm values
+        motorSpeedRight = -150;
       } 
-      else if(motorSpeedRight > 250){
-        motorSpeedRight = 250;
+      else if(motorSpeedRight > 150){
+        motorSpeedRight = 150;
       } 
       else if(motorSpeedRight > -3 && motorSpeedRight < 3){ //turns motor off too get rid of motor whine
         motorSpeedRight = 0;
@@ -441,7 +441,7 @@ void CircleFunc(){
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
       motorSpeedLeft = motorSpeedLeft*0.955 ;
-      motorSpeedLeft = motorSpeedLeft/1.98;
+      motorSpeedLeft = motorSpeedLeft/1.96;
 
       motorSpeedRightInt = (int)(motorSpeedRight);
       motorSpeedLeftInt = (int)(motorSpeedLeft);
