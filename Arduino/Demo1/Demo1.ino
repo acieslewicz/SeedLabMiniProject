@@ -28,12 +28,12 @@
   #define pin4 5
   #define i2c 13
   #define ChangeDirect 11
-  float KpLeft = 200;  //proportional control
-  float KiLeft = 0;    //integral control
-  float KpRight = 220;  //proportional control
-  float KiRight = 0;    //integral control
-  float KDLeft = 9;    //integral control
-  float KDRight = 10;  //proportional control
+  float KpLeft = 180;  //proportional control
+  float KiLeft = 6;    //integral control
+  float KpRight = 190;  //proportional control
+  float KiRight = 6;    //integral control
+  float KDLeft = 90;    //integral control
+  float KDRight = 90;  //proportional control
   long double integralErrorLeft = 0;
   long double integralErrorRight = 0;
   long double positionErrorLeft;
@@ -47,6 +47,8 @@
   float Tc = millis();
   long double encoderPositionLeft = 0.000;
   long double encoderPositionRight = 0.000;
+  long double encoderPositionLeftLast = 0.000;
+  long double encoderPositionRightLast = 0.000;
   long double encoderRadiansLeft = 0.000;
   long double encoderRadiansRight = 0.000;
   long double neededPositionLeft = 0;
@@ -70,8 +72,8 @@
   float angle2Prev = 0;
   int circle = 0;
   bool useSecondary = 0;
-  double secDistance = 8.61;//8.62;//7.5;
-  double secDistanceInner = 3.94;
+  double secDistance = 8.52;//8.62;//7.5;
+  double secDistanceInner = 3.95;
   int receivedDataCount = 0;
   double angleInt;
   double angleDec;
@@ -80,7 +82,9 @@
   int firstSend = 0;
  int angle2Count = 1;
  int STOP = 0;
+ int ErrorCount = 0;
 
+//////////Change based on encoder reading value being same after multiple iterations
 
 //////////////////////////////////////////////
 void setup(){
@@ -113,6 +117,7 @@ void loop(){
       angleFunc();
       angle = 0;
       delay(1000);
+      
     }
     while(firstSend == 0){
     }
@@ -176,6 +181,8 @@ void angleFunc(){
       encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
       positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
       positionErrorRight = neededPositionRight - encoderRadiansRight;
+
+      
       if(Ts > 0){
         DerivErrorLeft = (positionErrorLeft - PrevpositionErrorLeft)/Ts;
         DerivErrorRight = (positionErrorRight - PrevpositionErrorRight)/Ts;
@@ -228,7 +235,7 @@ void angleFunc(){
       if((motorSpeedLeftInt - motorSpeedLeftIntLast) > 5){
         motorSpeedLeftInt = motorSpeedLeftIntLast + 5;
       }
-
+      
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
       
@@ -239,7 +246,22 @@ void angleFunc(){
       
       motorSpeedLeftIntLast = motorSpeedLeftInt;
       motorSpeedRightIntLast = motorSpeedRightInt;
+     
       
+      if((encoderPositionLeftLast == encoderPositionLeft) && (encoderPositionRightLast == encoderPositionRight )){
+        ErrorCount += 1;
+        if(ErrorCount > 45){
+          ErrorCount = 0;
+          angle = 0;
+          Serial.println("Reset");
+        }
+      }
+      else{
+        ErrorCount = 0;
+      }
+      Serial.println(ErrorCount);
+      encoderPositionLeftLast = encoderPositionLeft;
+      encoderPositionRightLast = encoderPositionRight;
       if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
         angle = 0;
         encoderPositionLeft = 0;
@@ -254,6 +276,7 @@ void angleFunc(){
         motorSpeedRightIntLast = 0;
         leftWheel.write(0);
         rightWheel.write(0);
+        ErrorCount = 0;
        
       }
     }
@@ -272,6 +295,8 @@ void angleFunc(){
       encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
       positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
       positionErrorRight = neededPositionRight - encoderRadiansRight;
+     
+      
       if(Ts > 0){
         DerivErrorLeft = (positionErrorLeft - PrevpositionErrorLeft)/Ts;
         DerivErrorRight = (positionErrorRight - PrevpositionErrorRight)/Ts;
@@ -286,6 +311,7 @@ void angleFunc(){
       integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
       motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft) + (KDLeft*DerivErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
       motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight) + (KDRight*DerivErrorRight));
+    
       //Serial.println((double)(encoderPositionRight));
       if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
         motorSpeedLeft = -150;
@@ -324,7 +350,6 @@ void angleFunc(){
       if((motorSpeedLeftInt - motorSpeedLeftIntLast) > 1){
         motorSpeedLeftInt = motorSpeedLeftIntLast + 1;
       }
-
       
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
@@ -352,6 +377,23 @@ void angleFunc(){
       motor(motorSpeedRightInt,motorSpeedLeftInt);
       motorSpeedLeftIntLast = motorSpeedLeftInt;
       motorSpeedRightIntLast = motorSpeedRightInt;
+      
+      
+      if((encoderPositionLeftLast == encoderPositionLeft) && (encoderPositionRightLast == encoderPositionRight) ){
+        ErrorCount += 1;
+        if(ErrorCount > 45){
+         
+          ErrorCount = 0;
+          angle = 0;
+          Serial.println("Reset");
+        }
+      }
+      else{
+        ErrorCount = 0;
+      }
+      encoderPositionLeftLast = encoderPositionLeft;
+      encoderPositionRightLast = encoderPositionRight;
+      Serial.println(ErrorCount);
       if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
         distance = 0;
         encoderPositionLeft = 0;
@@ -367,6 +409,7 @@ void angleFunc(){
         angle2Count = 1;
         leftWheel.write(0);
         rightWheel.write(0);
+        ErrorCount = 0;
         
       }
     }
@@ -384,6 +427,7 @@ void CircleFunc(){
       encoderRadiansRight = (encoderPositionRight/CountsPerRev)*2*PI;  
       positionErrorLeft = neededPositionLeft - encoderRadiansLeft;
       positionErrorRight = neededPositionRight - encoderRadiansRight;
+     
       if(Ts > 0){
         DerivErrorLeft = (positionErrorLeft - PrevpositionErrorLeft)/Ts;
         DerivErrorRight = (positionErrorRight - PrevpositionErrorRight)/Ts;
@@ -398,6 +442,7 @@ void CircleFunc(){
       integralErrorRight  = integralErrorRight + ((Ts*positionErrorRight)/1000);
       motorSpeedLeft = ((KpLeft*positionErrorLeft) + (KiLeft*integralErrorLeft) + (KDLeft*DerivErrorLeft));   //calculating motor output in PWM output directly, no need to convert from voltage
       motorSpeedRight = ((KpRight*positionErrorRight) + (KiRight*integralErrorRight) + (KDRight*DerivErrorRight));
+     
       //Serial.println((double)(encoderPositionRight));
       if(motorSpeedLeft < -150){ //bounding motor speed to usable pwm values
         motorSpeedLeft = -150;
@@ -436,7 +481,7 @@ void CircleFunc(){
       if((motorSpeedLeftInt - motorSpeedLeftIntLast) > 5){
         motorSpeedLeftInt = motorSpeedLeftIntLast + 5;
       }
-
+      
       
       Ts = millis()-Tc;  //calculating sampling rate for discrete time integral
       Tc = millis();
@@ -449,6 +494,23 @@ void CircleFunc(){
       motor(motorSpeedRightInt,motorSpeedLeftInt);
       motorSpeedLeftIntLast = motorSpeedLeftInt;
       motorSpeedRightIntLast = motorSpeedRightInt;
+      
+      
+      if((encoderPositionLeftLast == encoderPositionLeft) && (encoderPositionRightLast == encoderPositionRight)){
+        ErrorCount += 1;
+        if(ErrorCount > 45){
+          
+          ErrorCount = 0;
+          angle = 0;
+          Serial.println("Reset");
+        }
+      }
+      else{
+        ErrorCount = 0;
+      }
+       encoderPositionLeftLast = encoderPositionLeft;
+      encoderPositionRightLast = encoderPositionRight;
+      Serial.println(ErrorCount);
       if(motorSpeedRightInt == 0 && motorSpeedLeftInt == 0){
         secDistance = 0;
         encoderPositionLeft = 0;
@@ -463,6 +525,7 @@ void CircleFunc(){
         motorSpeedRightIntLast = 0;
         leftWheel.write(0);
         rightWheel.write(0);
+        ErrorCount = 0;
        
       }
     }
